@@ -6,10 +6,16 @@ from src.util import config
 
 def logger(class_type: type):
     formatter = logging.Formatter('%(asctime)s %(levelname)s %(name)s - %(message)s')
-    stdout_handler = logging.StreamHandler(sys.stdout)
-    stdout_handler.setFormatter(formatter)
 
     logger = logging.getLogger(class_type.__name__)
+
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    stdout_handler.setFormatter(formatter)
     logger.addHandler(stdout_handler)
+
+    if config["logging"]["log_to_file"] == "True":
+        file_handler = logging.FileHandler(config["logging"]["log_file"])
+        logger.addHandler(file_handler)
+
     logger.setLevel(logging.getLevelName(config.get(section="logging", option="level", fallback="WARN")))
     return logger

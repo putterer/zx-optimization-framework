@@ -15,6 +15,9 @@ class Renderer(Loggable):
         self.on_resize()
 
     def on_resize(self):
+        if self.width == self.canvas.winfo_width() and self.height == self.canvas.winfo_height():
+            return
+
         self.width = self.canvas.winfo_width()
         self.height = self.canvas.winfo_height()
         self.log.info(f"Resized to {self.width}x{self.height}")
