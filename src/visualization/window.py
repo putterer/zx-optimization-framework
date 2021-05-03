@@ -1,73 +1,66 @@
-import tkinter as tk
+import os
+import sys
 
-from src.util import config
-# https://realpython.com/python-gui-tkinter/
+import gi
+
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk
+
 from src.visualization import Renderer
 
+# https://python-gtk-3-tutorial.readthedocs.io/en/latest/objects.html
+
+LAYOUT_FILE = "layout.glade"
 
 class Window:
     def __init__(self):
-        self.window: tk.Tk = None
-        self.toolbar = None # TODO: type
-        self.info_area = None
-        self.canvas_area = None
-        self.canvas: tk.Canvas = None
-        self.renderer = None
+        self.window: Gtk.Window = None
+        self.drawing_area: Gtk.DrawingArea = None
+        self.renderer: Renderer = None
 
-        self.init_window()
+        self.window = self.init_window()
+        self.renderer = Renderer(self.drawing_area)
 
-        self.window.bind("<Configure>", self.on_resize)
+        self.connect_signals()
 
-    def init_window(self):
-        self.window = tk.Tk()
-        self.window.title(config["visualization"]["window_title"])
-        self.window.geometry("1366x768")
+    def init_window(self) -> Gtk.Window:
+        os.environ["GTK_THEME"] = "theme:adwaita"  # light theme
 
-        self.window.rowconfigure(0, weight=0, minsize=30)
-        self.window.rowconfigure(1, weight=1, minsize=30)
-        self.window.rowconfigure(2, weight=0, minsize=30)
-        self.window.columnconfigure(0, weight=1, minsize=30)
+        builder = Gtk.Builder()
 
-        self.toolbar = self.init_toolbar()
-        self.toolbar.grid(row=0, column=0, pady=15, padx=15, sticky="nw")
+        if os.path.isfile(LAYOUT_FILE):
+            builder.add_from_file(LAYOUT_FILE)
+        else:
+            builder.add_from_file(os.path.join("../", LAYOUT_FILE))
 
-        self.canvas_area = self.init_canvas()
-        self.canvas_area.grid(row=1, column=0, pady=0, padx=15, sticky="nsew")
-        #
-        self.info_area = self.init_info_area()
-        self.info_area.grid(row=2, column=0, pady=15, padx=15, sticky="sw")
+        window = builder.get_object("mainWindow")
+        self.drawing_area = builder.get_object("mainDrawingArea")
 
-    def init_canvas(self):
-        frame = tk.Frame(self.window, bg="yellow")
+        builder.connect_signals(self)  # connect all signals specified in glade
 
-        self.canvas = tk.Canvas(frame, bg="green", width=50, height=50)
-        self.canvas.pack(fill=tk.BOTH, expand=True)
-        self.renderer = Renderer(self.canvas)
+        window.show_all()
 
-        return frame
+        return window
 
-    def init_toolbar(self):
-        frame = tk.Frame(self.window)
+    def connect_signals(self):
+        self.window.connect("destroy",
+                            self.on_destroy)  # would also be hooked by builder.connect_signals -> onDestroy()
 
-        cursor_button = tk.Button(frame, text="Cursor")
-        cursor_button.grid(column=0, padx=5, sticky="e")
-
-        return frame
-
-    def init_info_area(self):
-        frame = tk.Frame(self.window)
-
-        label = tk.Label(frame, text="InfoArea")
-        label.grid(column=0, row=0, padx=0)
-        status_label = tk.Label(frame, text="someStatus")
-        status_label.grid(column=1, row=0, padx=7)
-
-        return frame
-
-    def on_resize(self, event):
-        self.renderer.on_resize()
-
-
+        self.window.connect("configure-event", self.on_window_reconfigure)
 
     def main_loop(self):
-            self.window.mainloop()
+        Gtk.main()
+
+
+
+    # Signal handlers
+
+    def on_tool_button_clicked(self, button: Gtk.Button):
+        print("hello world ", button.get_label())
+
+    def on_destroy(self, *args):
+        Gtk.main_quit()
+        sys.exit(0)
+
+    def on_window_reconfigure(self, *args):
+        pass

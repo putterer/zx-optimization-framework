@@ -1,12 +1,11 @@
-from src.visualization import WindowGTK
-
+from src.visualization import Window
 
 def main():
     # window = Window()
     #
     # window.main_loop()
 
-    window = WindowGTK()
+    window = Window()
 
     window.main_loop()
 

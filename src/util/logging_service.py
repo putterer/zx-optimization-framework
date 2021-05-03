@@ -1,7 +1,8 @@
 import logging
 import sys
 
-from src.util import config
+from src.util.config_service import config
+from src.util.toolbox import is_interactive
 
 
 def logger(class_type: type):
@@ -17,5 +18,9 @@ def logger(class_type: type):
         file_handler = logging.FileHandler(config["logging"]["log_file"])
         logger.addHandler(file_handler)
 
-    logger.setLevel(logging.getLevelName(config.get(section="logging", option="level", fallback="WARN")))
+    if is_interactive():
+        logger.setLevel(logging.getLevelName(config.get(section="logging", option="level_interactive", fallback="WARN")))
+    else:
+        logger.setLevel(logging.getLevelName(config.get(section="logging", option="level", fallback="WARN")))
+
     return logger
