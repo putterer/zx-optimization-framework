@@ -1,4 +1,5 @@
+from zxopt.data_structures.circuit.circuit_component import CircuitComponent
 
-class BarrierComponent:
+class BarrierComponent(CircuitComponent):
     def __init__(self):
-        pass
+        super().__init__()
