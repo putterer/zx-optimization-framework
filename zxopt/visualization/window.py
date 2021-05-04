@@ -6,7 +6,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
-from src.visualization import Renderer
+from zxopt.visualization import Renderer
 
 # https://python-gtk-3-tutorial.readthedocs.io/en/latest/objects.html
 

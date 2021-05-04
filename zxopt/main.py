@@ -1,4 +1,4 @@
-from src.visualization import Window
+from zxopt.visualization import Window
 
 def main():
     # window = Window()

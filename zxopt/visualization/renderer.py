@@ -7,7 +7,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
-from src.util import Loggable, display_in_notebook
+from zxopt.util import Loggable, display_in_notebook
 
 # https://www.tutorialspoint.com/pygtk/pygtk_drawingarea_class.htm
 

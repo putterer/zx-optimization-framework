@@ -1,8 +1,8 @@
 import logging
 import sys
 
-from src.util.config_service import config
-from src.util.toolbox import is_interactive
+from zxopt.util.config_service import config
+from zxopt.util.toolbox import is_interactive
 
 
 def logger(class_type: type):

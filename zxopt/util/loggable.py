@@ -1,4 +1,4 @@
-from src.util import logger
+from zxopt.util.logging_service import logger
 
 """
 Represents a class that contains a logger for easy access
