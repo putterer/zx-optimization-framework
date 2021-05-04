@@ -1,9 +1,10 @@
 import os
 import re
 
-from zxopt.data_structures.circuit.circuit import Circuit
+from zxopt.data_structures.circuit import Circuit
 from zxopt.util import Loggable
 
+VAR_NAME = "[a-z][a-zA-Z0-9_]*"
 
 class OpenQASMParser(Loggable):
     def __init__(self):
@@ -13,8 +14,9 @@ class OpenQASMParser(Loggable):
         self.version: str = ""
 
         self.handlers = {
-            self.__parse_version: [r"OPENQASM (\d+\.\d+)"],
-            self.__parse_include: [r"include \"([a-zA-Z0-9_\-\.]+)\""],
+            self.__parse_version: ["OPENQASM (\\d+\\.\\d+)"],
+            self.__parse_include: ["include \"([a-zA-Z0-9_\\-\\.]+)\""],
+            self.__parse_register: [f"(qreg|creg) ({VAR_NAME})\\[(\d+)\\]"]
         }
 
     def load_file(self, filename: str) -> Circuit:
@@ -47,8 +49,13 @@ class OpenQASMParser(Loggable):
         raise RuntimeError("Could not parse statement: \"" + statement + "\"")
 
     def __parse_version(self, match: re.Match):
+        if self.version != "":
+            raise RuntimeError("Duplicate specification of version")
         self.version = match.group(1)
         self.log.debug(f"Detected OpenQASM version: {self.version}")
+
+        if self.version != "2.0":
+            raise NotImplementedError(f"Unsupported version: {self.version}, this parser only supports version 2.0")
 
     def __parse_include(self, match: re.Match):
         filename = os.path.join(self.working_directory, match.group(1))
@@ -56,6 +63,18 @@ class OpenQASMParser(Loggable):
 
         with open(filename, "r") as file:
             self.__parse_input(file.read())
+
+    def __parse_register(self, match: re.Match):
+        reg_type = match.group(1)
+        name = match.group(2)
+        size = int(match.group(3))
+
+        if type == "qreg":
+            pass
+        elif type == "creg":
+            pass
+        else:
+            raise NotImplementedError(f"Unsupported register type {reg_type}")
 
     """
     Returns the statements contained in the input(separated by semicolons) as a list, removes empty statements, removes comments

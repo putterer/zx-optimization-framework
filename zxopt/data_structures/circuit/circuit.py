@@ -5,3 +5,8 @@ class Circuit:
         pass
 
 
+    def add_component(self):
+        pass
+
+    def remove_component(self):
+        pass
