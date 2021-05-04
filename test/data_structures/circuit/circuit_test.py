@@ -47,7 +47,7 @@ class CircuitTest(unittest.TestCase):
         self.assertIn(measurement, circuit.components)
         self.assertEqual(circuit, measurement.circuit)
 
-        # TODO: temporal
+        self.assertEqual(0, measurement.step)
 
     def test_get_components_affecting_bits(self):
         circuit = Circuit()
@@ -72,3 +72,21 @@ class CircuitTest(unittest.TestCase):
 
         self.assertIn(measurement1, circuit.get_components_affecting_bits({qreg[0],qreg[1]}))
         self.assertIn(measurement2, circuit.get_components_affecting_bits({qreg[0],qreg[1]}))
+
+    def test_add_components_step(self):
+        circuit = Circuit()
+        qreg = QuantumRegister(3)
+        creg = ClassicalRegister(3)
+        circuit.add_register(qreg)
+        circuit.add_register(creg)
+
+        for i in range(100):
+            comp = MeasurementComponent(qreg[i % 2], creg[0])
+            circuit.add_component(comp)
+
+            self.assertEqual(i, comp.step)
+
+        comp = MeasurementComponent(qreg[2], creg[1])
+        circuit.add_component(comp)
+
+        self.assertEqual(0, comp.step)
