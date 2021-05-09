@@ -20,3 +20,7 @@ def is_interactive():
 
 def display_in_notebook(io: BytesIO):
     display(SVG(data=io.getvalue()))
+
+
+def round_complex(c: complex, digits: int = 8):
+    return round(c.real, digits) + round(c.imag, digits) * 1j

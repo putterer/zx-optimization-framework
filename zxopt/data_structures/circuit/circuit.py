@@ -15,7 +15,6 @@ class Circuit:
 
         last_affected_step = max([c.step for c in self.get_components_affecting_bits(component.affected_bits)], default=-1)
         component.step = last_affected_step + 1
-        print("added at step ", component.step)
 
         self.components.add(component)
 
