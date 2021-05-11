@@ -1,4 +1,4 @@
-grammar openqasm;
+grammar OpenQASM;
 // based on: https://arxiv.org/pdf/1707.03429v2.pdf
 
 mainprogram: version program;
