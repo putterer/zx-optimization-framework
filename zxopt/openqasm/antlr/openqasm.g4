@@ -42,7 +42,7 @@ uop:
     | 'CX' argument ',' argument ';'
     | ID anylist ';'
     | ID '(' ')' anylist ';'
-    | ID '(' explist ')' anylist;
+    | ID '(' explist ')' anylist ';';
 
 
 
