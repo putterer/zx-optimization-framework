@@ -8,7 +8,7 @@ from antlr4.tree.Tree import ParseTreeWalker
 from antlr.OpenQASMLexer import OpenQASMLexer
 from antlr.OpenQASMListener import OpenQASMListener
 from antlr.OpenQASMParser import OpenQASMParser
-from zxopt.data_structures.circuit import Circuit
+from zxopt.data_structures.circuit import Circuit, MeasurementComponent
 from zxopt.data_structures.circuit.register.quantum_register import QuantumRegister
 from zxopt.util import Loggable
 
@@ -46,7 +46,10 @@ class OpenQasmParser(Loggable, OpenQASMListener):
 
         self.log.info("Parsed OpenQASM successfully")
 
-
+    # TODO: how to parse sub gates?
+    # function that generates it?
+    # sub circuit where the bits get swapped?
+    # just save text and parse later again? (maybe with same handler)
 
     def enterVersion(self, ctx: OpenQASMParser.VersionContext):
         self.version = str(ctx.REAL())
@@ -73,6 +76,36 @@ class OpenQasmParser(Loggable, OpenQASMListener):
 
         self.circuit.add_register(register)
         self.log.debug(f"Added {register_name} register with {bit_count} qubits")
+
+
+    def enterMeasure(self, ctx:OpenQASMParser.MeasureContext):
+        source_registers = self.__get_registers_bits(ctx.argument(0))
+        target_registers = self.__get_registers_bits(ctx.argument(1))
+
+        if len(source_registers) != len(target_registers):
+            raise RuntimeError(f"Source and target register sizes for measurement must match! ({ctx.argument(0).getText()} -> {ctx.argument(1).getText()})")
+
+        for i in range(len(source_registers)):
+            self.circuit.add_component(MeasurementComponent(source_registers[i], target_registers[i]))
+        self.log.debug(f"Added {len(source_registers)} measurements ({ctx.argument(0).getText()} -> {ctx.argument(1).getText()})")
+
+    def enterReset_op(self, ctx:OpenQASMParser.Reset_opContext):
+        registers = self.__get_registers_bits(ctx.argument())
+        raise NotImplementedError("Reset functionality not implemented")
+
+    """
+    Returns all registers bits specified by the given argument, may be multiple in case the bit in the register is not specified
+    """
+    def __get_registers_bits(self, ctx: OpenQASMParser.ArgumentContext):
+        register_name = ctx.ID().getText()
+        register = self.registers[register_name]
+        if not register:
+            raise RuntimeError(f"Register of name {register_name} not found")
+        if ctx.NNINTEGER():
+            bit_index = int(ctx.NNINTEGER().getText())
+            return [ register.bits[bit_index] ]
+        else:
+            return register.bits
 
     """
     Iteratively resolves all includes specified in the file and inserts them into the program

@@ -27,15 +27,16 @@ gatedecl:
     | 'gate' ID '(' idlist ')' idlist '{';
 
 goplist:
-    uop
-    | 'barrier' idlist ';'
-    | goplist uop
-    | goplist 'barrier' idlist ';';
+    (uop | 'barrier' idlist ';')*;
 
 qop:
     uop
-    | 'measure' argument '->' argument ';'
-    | 'reset' argument ';';
+    | measure
+    | reset_op;
+
+reset_op: 'reset' argument ';';
+measure: 'measure' argument '->' argument ';';
+
 
 uop:
     'U' '(' explist ')' argument ';'
@@ -47,7 +48,7 @@ uop:
 
 
 anylist: idlist | mixedlist;
-idlist: ID | idlist ',' ID;
+idlist: (ID ',')* ID;
 mixedlist:
     ID '[' NNINTEGER ']'
     | mixedlist ',' ID
