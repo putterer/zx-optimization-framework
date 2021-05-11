@@ -5,10 +5,8 @@ from zxopt.data_structures.circuit.register.quantum_register import QuantumBit
 
 class MeasurementComponent(CircuitComponent):
     def __init__(self, measured_qubit: QuantumBit, target_bit: ClassicalBit):
-        super().__init__()
+        super().__init__({measured_qubit, target_bit})
 
         self.measured_qubit: QuantumBit = measured_qubit
         self.target_bit: ClassicalBit = target_bit
-
-        self.affected_bits = {measured_qubit, target_bit}
 

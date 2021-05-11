@@ -9,11 +9,12 @@ from zxopt.util.toolbox import round_complex
 
 
 class GateComponent(CircuitComponent):
-    def __init__(self, target_qubit: QuantumBit, control_bits: set[RegisterBit] = frozenset()):
-        super().__init__()
+    def __init__(self, target_qubit: QuantumBit, gate_type: "Gate", control_bits: set[RegisterBit] = frozenset()):
+        super().__init__(control_bits.union({target_qubit}))
 
         self.target_qubit: QuantumBit = target_qubit
         self.control_bits: set[RegisterBit] = control_bits
+        self.gate_type: Gate = gate_type
 
         # todo: type + matrix
 

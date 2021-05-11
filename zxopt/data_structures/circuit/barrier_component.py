@@ -4,6 +4,4 @@ from zxopt.data_structures.circuit.register.register import RegisterBit
 
 class BarrierComponent(CircuitComponent):
     def __init__(self, bits: set[RegisterBit]):
-        super().__init__()
-
-        self.affected_bits = bits
+        super().__init__(bits)
