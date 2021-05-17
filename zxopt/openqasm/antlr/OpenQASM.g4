@@ -8,23 +8,31 @@ program: statement+;
 
 statement:
     decl
-    | gatedecl goplist '}'
-    | gatedecl '}'
+    | gatestmt
     | 'opaque' ID idlist ';'
     | 'opaque' ID '(' ')' idlist ';'
     | 'opaque' ID '(' idlist ')' idlist ';'
-    | qop
-    | 'if' '(' ID '==' NNINTEGER ')' qop
+    | statementqop
+    | conditionalqop
     | 'barrier' anylist ';';
 
 decl: qreg_decl | creg_decl;
 qreg_decl: 'qreg' ID '[' NNINTEGER ']' ';';
 creg_decl: 'creg' ID '[' NNINTEGER ']' ';';
 
+gatestmt: gatedecl goplist '}' | gatedecl '}';
+
 gatedecl:
-    'gate' ID idlist '{'
-    | 'gate' ID '(' ')' idlist '{'
-    | 'gate' ID '(' idlist ')' idlist '{';
+    'gate' ID gateqargs '{'
+    | 'gate' ID '(' ')' gateqargs '{'
+    | 'gate' ID '(' gateparams ')' gateqargs '{';
+
+gateqargs: idlist;
+gateparams: idlist;
+
+statementqop: qop;
+conditionalqop: 'if' '(' ID '==' NNINTEGER ')' qop;
+
 
 goplist:
     (uop | 'barrier' idlist ';')*;
@@ -59,12 +67,12 @@ argument: ID | ID '[' NNINTEGER ']';
 
 explist: (exp ',')* exp;
 exp:
-    REAL| NNINTEGER | 'pi' | ID
+    REAL| NNINTEGER | PI | ID
     | exp '+' exp | exp '-' exp | exp '*' exp | exp '/' exp
     | exp '^' exp | '-' exp | '(' exp ')' | unaryop '(' exp ')';
 unaryop: 'sin' | 'cos' | 'tan' | 'exp' | 'ln' | 'sqrt';
 
-
+PI: 'pi';
 ID: [a-z][A-Za-z0-9_]*;
 NNINTEGER: [0-9]+;
 REAL: [+-]? NNINTEGER '.' [0-9]+ ([eE][-+]?[0-9]+)?;
