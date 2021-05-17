@@ -22,10 +22,13 @@ class GateComponent(CircuitComponent):
 
 class Gate:
     def __init__(self, representation: str, matrix: np.ndarray):
+        self.representation = representation
         self.matrix = matrix
 
 class UnitaryGate(Gate): # defines an arbitrary unitary gate used by the QE OpenQASM library to define all other gates
     def __init__(self, representation: str, theta: float = None, phi: float = None, lmbda: float = 0.0):
+        self.representation = representation
+
         if theta is None and phi is None:
             theta = 0
             phi = 0

@@ -1,3 +1,6 @@
+OPENQASM 2.0;
+include "qelib1.inc";
+
 qreg source[1];
 qreg entangled[2];
 creg c0[1];

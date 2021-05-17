@@ -14,7 +14,9 @@ statement:
     | 'opaque' ID '(' idlist ')' idlist ';'
     | statementqop
     | conditionalqop
-    | 'barrier' anylist ';';
+    | barrier;
+
+barrier: 'barrier' anylist ';';
 
 decl: qreg_decl | creg_decl;
 qreg_decl: 'qreg' ID '[' NNINTEGER ']' ';';
@@ -34,8 +36,9 @@ statementqop: qop;
 conditionalqop: 'if' '(' ID '==' NNINTEGER ')' qop;
 
 
-goplist:
-    (uop | 'barrier' idlist ';')*;
+goplist: (goplistentry)*;
+goplistentry: uop | 'barrier' idlist ';';
+
 
 qop:
     uop
@@ -55,13 +58,14 @@ uop:
 
 
 
-anylist: idlist | mixedlist;
 idlist: (ID ',')* ID;
-mixedlist:
-    ID '[' NNINTEGER ']'
-    | mixedlist ',' ID
-    | mixedlist ',' ID '[' NNINTEGER ']'
-    | idlist ',' ID '[' NNINTEGER ']';
+anylist: (argument ',')* argument;
+//anylist: idlist | mixedlist;
+//mixedlist:
+//    ID '[' NNINTEGER ']'
+//    | mixedlist ',' ID
+//    | mixedlist ',' ID '[' NNINTEGER ']'
+//    | idlist ',' ID '[' NNINTEGER ']';
 
 argument: ID | ID '[' NNINTEGER ']';
 

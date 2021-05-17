@@ -11,9 +11,11 @@ from antlr.OpenQASMListener import OpenQASMListener
 from antlr.OpenQASMParser import OpenQASMParser
 from zxopt.data_structures.circuit import Circuit, MeasurementComponent, GateComponent, UnitaryGate, PauliXGate
 from zxopt.data_structures.circuit.register.quantum_register import QuantumRegister, QuantumBit
+from zxopt.data_structures.circuit.register.register import RegisterBit
 from zxopt.util import Loggable
 
 INCLUDE_PATTERN = r"include\s+\"([a-zA-Z0-9_\\-\\.]+)\"\s*;"
+TRACE = False
 
 class OpenQasmParser(Loggable, OpenQASMListener):
     def __init__(self):
@@ -101,6 +103,12 @@ class OpenQasmParser(Loggable, OpenQASMListener):
         registers = self.__get_registers_bits(ctx.argument())
         raise NotImplementedError("Reset functionality not implemented")
 
+    def enterBarrier(self, ctx:OpenQASMParser.BarrierContext):
+        if not isinstance(ctx.parentCtx, OpenQASMParser.StatementContext):
+            return # we are running through a gate definition, ignore
+
+        self.log.warning("Ignoring barrier, not yet supported")
+
     """
     A single unitary operation, not located within a gate statement
     """
@@ -108,30 +116,50 @@ class OpenQasmParser(Loggable, OpenQASMListener):
         if not isinstance(ctx.parentCtx, OpenQASMParser.QopContext):
             return # we are running through a gate definition, ignore
         if not isinstance(ctx.parentCtx.parentCtx, OpenQASMParser.StatementqopContext):
-            raise NotImplementedError("Only statement QOPs are supported, no conditionals!")
+            raise NotImplementedError("Only statement QOPs are supported, no conditionals! Can be fixed easily.")
 
+        self.apply_uop(ctx, {}, {})
+
+    def apply_uop(self, ctx:OpenQASMParser.UopContext, bound_qubit_names: dict[str, QuantumBit], bound_names: dict[str, float]):
         gate_name = ctx.children[0].getText() # 'U', 'CX' or ID for custom gate
-        qarg_contexts = ctx.argument() + ctx.anylist()
-        qargs = [self.__get_registers_bit(qarg) for qarg in qarg_contexts]
+        params = params = ctx.explist().exp() if ctx.explist() else []
+        qarg_contexts = []
+        if ctx.argument():
+            qarg_contexts += ctx.argument()
+        if ctx.anylist():
+            qarg_contexts += ctx.anylist().argument()
 
-        self.apply_gate(gate_name, )
+        qargs = []
+        for ctx in qarg_contexts:
+            if ctx.getText() in bound_qubit_names:
+                qargs.append(bound_qubit_names[ctx.getText()])
+            else:
+                qargs.append(self.__get_registers_bit(ctx))
 
+        self.apply_gate(gate_name, params, qargs, bound_names)
 
 
     def enterGatestmt(self, ctx:OpenQASMParser.GatestmtContext):
         gatedecl: OpenQASMParser.GatedeclContext = ctx.gatedecl()
 
         name = gatedecl.ID().getText()
-        qargs = [node.getText() for node in gatedecl.gateqargs().idlist().ID()]
         params = [node.getText() for node in gatedecl.gateparams().idlist().ID()] if gatedecl.gateparams() is not None else []
+        qargs = [node.getText() for node in gatedecl.gateqargs().idlist().ID()]
 
-        gate_declaration = GateDeclaration(name, qargs, params, ctx.goplist())
+        gate_declaration = GateDeclaration(name, params, qargs, ctx.goplist())
         self.gate_declarations[name] = gate_declaration
 
-        self.log.debug(f"Defined gate \"{name}\" with params {params} and args {qargs}")
+        if TRACE:
+            self.log.debug(f"Defined gate \"{name}\" with params {params} and args {qargs}")
 
     """
     Applies the gate with the given name, recursively if necessary
+    name:
+        the name of the gate
+    params: list[OpenQASMParser.ExpContext]
+        the list of parameters (as contexts, not evaluated)
+    qargs: list[QuantumBit]
+        the qubits to apply the gate to
     """
     def apply_gate(self, name: str, params: list[OpenQASMParser.ExpContext], qargs: list[QuantumBit], bound_names: dict[str, float]):
         evaluator = ExpressionEvaluator(bound_names)
@@ -164,6 +192,9 @@ class OpenQasmParser(Loggable, OpenQASMListener):
         if gate:
             self.circuit.add_component(gate)
 
+            if TRACE:
+                self.log.debug(f"Added gate: {gate.gate_type.representation}")
+
     """
     Applies a gate declaration recursively at the current location given a list of parameters
     """
@@ -181,13 +212,23 @@ class OpenQasmParser(Loggable, OpenQASMListener):
         for i in range(len(qargs)):
             named_qargs[gate.qarg_names[i]] = qargs[i]
 
+        # raise NotImplementedError() # TODO
+        if TRACE:
+            self.log.debug(f"Applying gate definition: {gate.name}, params: {named_params}")
 
-        raise NotImplementedError() # TODO
+        # apply the gate ops list
+        for entry_ctx in gate.goplist_ctx.goplistentry():
+            if entry_ctx.idlist(): # barrier
+                raise NotImplementedError("Barriers are not yet implemented")
+            elif entry_ctx.uop():
+                self.apply_uop(entry_ctx.uop(), named_qargs, named_params)
+
+
 
     """
     Returns all registers bits specified by the given argument, may be multiple in case the bit in the register is not specified
     """
-    def __get_registers_bits(self, ctx: OpenQASMParser.ArgumentContext):
+    def __get_registers_bits(self, ctx: OpenQASMParser.ArgumentContext) -> list[RegisterBit]:
         register_name = ctx.ID().getText()
         register = self.registers[register_name]
         if not register:
@@ -201,7 +242,7 @@ class OpenQasmParser(Loggable, OpenQASMListener):
     """
     Returns register bit specified by the given argument, throws an error if index is not specified
     """
-    def __get_registers_bit(self, ctx: OpenQASMParser.ArgumentContext):
+    def __get_registers_bit(self, ctx: OpenQASMParser.ArgumentContext) -> RegisterBit:
         register_bits = self.__get_registers_bits(ctx)
         if len(register_bits) != 1:
             raise RuntimeError(f"Expected one register bit, found multiple for: {ctx.getText()}")
@@ -278,10 +319,10 @@ class ExpressionEvaluator:
             return self.evaluate_unaryop(ctx)
 
         if ctx.getText().startswith("("):
-            return self.evaluate(ctx.exp())
+            return self.evaluate(ctx.exp(0))
 
         if ctx.getText().startswith("-"):
-            return (-1.0) * self.evaluate(ctx.exp())
+            return (-1.0) * self.evaluate(ctx.exp(0))
 
         return self.evaluate_binary_op(ctx)
 
@@ -313,9 +354,9 @@ class ExpressionEvaluator:
             "ln": lambda x: math.log(x, math.e),
             "sqrt": lambda x: math.sqrt(x)
         }
-        return funs[ctx.unaryop().getText()](self.evaluate(ctx.exp()))
+        return funs[ctx.unaryop().getText()](self.evaluate(ctx.exp(0)))
 
 
 if __name__ == "__main__":
     parser = OpenQasmParser()
-    circuit = parser.load_file("circuits/bell_swap.qasm")
+    circuit = parser.load_file("circuits/teleportation.qasm")
