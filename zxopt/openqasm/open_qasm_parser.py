@@ -2,7 +2,7 @@ import math
 import os
 import re
 
-from antlr4 import InputStream
+from antlr4 import InputStream, ParserRuleContext
 from antlr4.CommonTokenStream import CommonTokenStream
 from antlr4.tree.Tree import ParseTreeWalker
 
@@ -14,8 +14,8 @@ from zxopt.data_structures.circuit.register.quantum_register import QuantumRegis
 from zxopt.data_structures.circuit.register.register import RegisterBit
 from zxopt.util import Loggable
 
-INCLUDE_PATTERN = r"include\s+\"([a-zA-Z0-9_\\-\\.]+)\"\s*;"
-TRACE = False
+INCLUDE_PATTERN = r"include\s+\"([a-zA-Z0-9_\\-\\./]+)\"\s*;"
+TRACE = True
 
 class OpenQasmParser(Loggable, OpenQASMListener):
     def __init__(self):
@@ -84,7 +84,7 @@ class OpenQasmParser(Loggable, OpenQASMListener):
 
     def enterMeasure(self, ctx:OpenQASMParser.MeasureContext):
         if not isinstance(ctx.parentCtx.parentCtx, OpenQASMParser.StatementqopContext):
-            raise NotImplementedError("Only statement QOPs are supported, no conditionals!")
+            raise NotImplementedError("Only statement measurements are supported, no conditionals!")
 
         source_registers = self.__get_registers_bits(ctx.argument(0))
         target_registers = self.__get_registers_bits(ctx.argument(1))
@@ -116,13 +116,13 @@ class OpenQasmParser(Loggable, OpenQASMListener):
         if not isinstance(ctx.parentCtx, OpenQASMParser.QopContext):
             return # we are running through a gate definition, ignore
         if not isinstance(ctx.parentCtx.parentCtx, OpenQASMParser.StatementqopContext):
-            raise NotImplementedError("Only statement QOPs are supported, no conditionals! Can be fixed easily.")
+            raise NotImplementedError("Only statement QOPs are supported, no conditionals! Can be fixed easily for single gates.")
 
         self.apply_uop(ctx, {}, {})
 
     def apply_uop(self, ctx:OpenQASMParser.UopContext, bound_qubit_names: dict[str, QuantumBit], bound_names: dict[str, float]):
         gate_name = ctx.children[0].getText() # 'U', 'CX' or ID for custom gate
-        params = params = ctx.explist().exp() if ctx.explist() else []
+        params = ctx.explist().exp() if ctx.explist() else []
         qarg_contexts = []
         if ctx.argument():
             qarg_contexts += ctx.argument()
@@ -318,10 +318,11 @@ class ExpressionEvaluator:
         if ctx.unaryop():
             return self.evaluate_unaryop(ctx)
 
-        if ctx.getText().startswith("("):
+        text = ctx.getText()
+        if text.startswith("(") and text.endswith(")") and text.count("(") == text.count(")"):
             return self.evaluate(ctx.exp(0))
 
-        if ctx.getText().startswith("-"):
+        if text.startswith("-"):
             return (-1.0) * self.evaluate(ctx.exp(0))
 
         return self.evaluate_binary_op(ctx)
@@ -329,16 +330,15 @@ class ExpressionEvaluator:
     def evaluate_binary_op(self, ctx: OpenQASMParser.ExpContext):
         eval1 = self.evaluate(ctx.exp(0))
         eval2 = self.evaluate(ctx.exp(1))
-        text = ctx.getText()
-        if "+" in text:
+        if self.any_child_node("+", ctx):  # TODO: does not work if multiple expressions packed together (e.g. (p-2)*40)
             return eval1 + eval2
-        elif "-" in text:
+        elif self.any_child_node("-", ctx):
             return eval1 - eval2
-        elif "*" in text:
+        elif self.any_child_node("*", ctx):
             return eval1 * eval2
-        elif "/" in text:
+        elif self.any_child_node("/", ctx):
             return eval1 / eval2
-        elif "^" in text:
+        elif self.any_child_node("^", ctx):
             return eval1 ** eval2
 
         raise RuntimeError(f"Could not evaluate expression: {ctx.getText()}")
@@ -356,7 +356,9 @@ class ExpressionEvaluator:
         }
         return funs[ctx.unaryop().getText()](self.evaluate(ctx.exp(0)))
 
+    def any_child_node(self, search_str: str, ctx: ParserRuleContext):
+        return any(map(lambda it: it.getText() == search_str, ctx.children))
 
 if __name__ == "__main__":
     parser = OpenQasmParser()
-    circuit = parser.load_file("circuits/teleportation.qasm")
+    circuit = parser.load_file("circuits/test/recursion_test.qasm")
