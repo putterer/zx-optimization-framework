@@ -9,13 +9,23 @@ from antlr4.tree.Tree import ParseTreeWalker
 from antlr.OpenQASMLexer import OpenQASMLexer
 from antlr.OpenQASMListener import OpenQASMListener
 from antlr.OpenQASMParser import OpenQASMParser
-from zxopt.data_structures.circuit import Circuit, MeasurementComponent, GateComponent, UnitaryGate, PauliXGate
+from zxopt.data_structures.circuit import Circuit, MeasurementComponent, GateComponent, UnitaryGate, PauliXGate, \
+    HadamardGate, PauliYGate, PauliZGate, PhaseGate, TGate
 from zxopt.data_structures.circuit.register.quantum_register import QuantumRegister, QuantumBit
 from zxopt.data_structures.circuit.register.register import RegisterBit
 from zxopt.util import Loggable
 
 INCLUDE_PATTERN = r"include\s+\"([a-zA-Z0-9_\\-\\./]+)\"\s*;"
 TRACE = True
+
+PREDEFINED_GATE_TYPES = {  # will be replaced by built-in gates instead of relying on the library based specification
+    "h": HadamardGate(),
+    "x": PauliXGate(),
+    "y": PauliYGate(),
+    "z": PauliZGate(),
+    "s": PhaseGate(),
+    "t": TGate()
+}
 
 class OpenQasmParser(Loggable, OpenQASMListener):
     def __init__(self):
@@ -143,6 +153,11 @@ class OpenQasmParser(Loggable, OpenQASMListener):
         gatedecl: OpenQASMParser.GatedeclContext = ctx.gatedecl()
 
         name = gatedecl.ID().getText()
+
+        if name in PREDEFINED_GATE_TYPES:
+            self.log.info(f"Tried to redefine {name} gate which is built-in, ignoring...")
+            return
+
         params = [node.getText() for node in gatedecl.gateparams().idlist().ID()] if gatedecl.gateparams() is not None else []
         qargs = [node.getText() for node in gatedecl.gateqargs().idlist().ID()]
 
@@ -165,7 +180,7 @@ class OpenQasmParser(Loggable, OpenQASMListener):
         evaluator = ExpressionEvaluator(bound_names)
         evaluated_params = [evaluator.evaluate(ctx) for ctx in params]
 
-        if name == "U" or name == "CX":
+        if name == "U" or name.upper() == "CX" or name in PREDEFINED_GATE_TYPES:
             self.apply_gate_builtin(name, evaluated_params, qargs)
         else:
             gate_declaration = self.gate_declarations[name]
@@ -182,12 +197,16 @@ class OpenQasmParser(Loggable, OpenQASMListener):
             if len(qargs) != 1:
                 raise RuntimeError(f"Expected 1 qubit for U gate, got {len(qargs)}")
             gate = GateComponent(qargs[0], UnitaryGate("U", params[0], params[1], params[2]))
-        elif name == "CX":
+        elif name.upper() == "CX":
             if len(qargs) != 2:
                 raise RuntimeError(f"Expected 2 qubits for CX gate, got {len(qargs)}")
             gate = GateComponent(qargs[0], PauliXGate(), { qargs[1] })
+        elif name in PREDEFINED_GATE_TYPES:
+            if len(qargs) != 1:
+                raise RuntimeError(f"Expected 1 qubits for {name} gate, got {len(qargs)}")
+            gate = GateComponent(qargs[0], PREDEFINED_GATE_TYPES[name])
         else:
-            raise RuntimeError(f"Unknow gate type: {name}")
+            raise RuntimeError(f"Unknown gate type: {name}")
 
         if gate:
             self.circuit.add_component(gate)
@@ -361,4 +380,4 @@ class ExpressionEvaluator:
 
 if __name__ == "__main__":
     parser = OpenQasmParser()
-    circuit = parser.load_file("circuits/test/recursion_test.qasm")
+    circuit = parser.load_file("circuits/bell_swap.qasm")
