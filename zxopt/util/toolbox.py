@@ -1,4 +1,5 @@
 from io import BytesIO
+from typing import TypeVar, Callable
 
 from IPython.display import display, SVG
 
@@ -24,3 +25,14 @@ def display_in_notebook(io: BytesIO):
 
 def round_complex(c: complex, digits: int = 8):
     return round(c.real, digits) + round(c.imag, digits) * 1j
+
+
+T = TypeVar("T")
+S = TypeVar("S")
+
+def flat_map(f: Callable[[T], list[S]], l: list[T]) -> list[S]:
+    return [e for o in l for e in f(o)]
+
+def flatten(l: list[list[T]]) -> list[T]:
+    return flat_map(lambda x: x, l)
+

@@ -6,20 +6,21 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
-from zxopt.visualization import Renderer
+from zxopt.visualization.renderer import Renderer
 
 # https://python-gtk-3-tutorial.readthedocs.io/en/latest/objects.html
 
 LAYOUT_FILE = "layout.glade"
 
 class Window:
-    def __init__(self):
-        self.window: Gtk.Window = None
-        self.drawing_area: Gtk.DrawingArea = None
-        self.renderer: Renderer = None
+    window: Gtk.Window
+    drawing_area: Gtk.DrawingArea
+    renderer: Renderer
 
+    def __init__(self, renderer: Renderer = Renderer()):
         self.window = self.init_window()
-        self.renderer = Renderer(self.drawing_area)
+        self.renderer = renderer
+        renderer.set_drawing_area(self.drawing_area)
 
         self.connect_signals()
 

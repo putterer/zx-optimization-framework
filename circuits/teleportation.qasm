@@ -29,8 +29,9 @@ measure entangled[0] -> c1[0];
 barrier source[0], entangled[0], entangled[1];
 
 // transmit classical bits
-if(c1==1) x entangled[1];
-if(c0==1) z entangled[1];
+//if(c1==1) x entangled[1];
+//if(c0==1) z entangled[1];
+// TODO: reenable
 
 // reset classical registers
 measure zero[0] -> c0[0];

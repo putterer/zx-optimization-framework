@@ -3,8 +3,11 @@ import os
 
 CONFIG_FILE = "config.ini"
 
+path = CONFIG_FILE
 config = configparser.ConfigParser()
-if(os.path.isfile(CONFIG_FILE)):
-    config.read(CONFIG_FILE)
-else:
-    config.read(os.path.join("..", CONFIG_FILE))
+for i in range(10):
+    if os.path.isfile(path):
+        break
+    path = os.path.join("..", path)
+
+config.read(path)

@@ -72,8 +72,8 @@ argument: ID | ID '[' NNINTEGER ']';
 explist: (exp ',')* exp;
 exp:
     REAL| NNINTEGER | PI | ID
-    | exp '+' exp | exp '-' exp | exp '*' exp | exp '/' exp
-    | exp '^' exp | '-' exp | '(' exp ')' | unaryop '(' exp ')';
+    | exp '^' exp | exp '*' exp | exp '/' exp | exp '+' exp
+    | exp '-' exp | '-' exp | '(' exp ')' | unaryop '(' exp ')';
 unaryop: 'sin' | 'cos' | 'tan' | 'exp' | 'ln' | 'sqrt';
 
 PI: 'pi';

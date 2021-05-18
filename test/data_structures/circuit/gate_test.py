@@ -3,6 +3,9 @@ import unittest
 
 class GateTest(unittest.TestCase):
     pass
+
+    # This can be done by checking the inner product (and therefore measurement probability)
+
     # def test_identity(self):
     #     self.assertTrue((IdentityGate().matrix == np.array([
     #         [1+0j, 0+0j],

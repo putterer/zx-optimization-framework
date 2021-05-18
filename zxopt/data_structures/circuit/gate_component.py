@@ -9,23 +9,26 @@ from zxopt.util.toolbox import round_complex
 
 
 class GateComponent(CircuitComponent):
-    def __init__(self, target_qubit: QuantumBit, gate_type: "Gate", control_bits: set[RegisterBit] = frozenset()):
+    target_qubit: QuantumBit
+    control_bits: set[RegisterBit]
+    gate_type: "GateType"
+
+    def __init__(self, target_qubit: QuantumBit, gate_type: "GateType", control_bits: set[RegisterBit] = frozenset()):
         super().__init__(control_bits.union({target_qubit}))
 
-        self.target_qubit: QuantumBit = target_qubit
-        self.control_bits: set[RegisterBit] = control_bits
-        self.gate_type: Gate = gate_type
-
-        # todo: type + matrix
+        self.target_qubit = target_qubit
+        self.control_bits = control_bits
+        self.gate_type = gate_type
 
 
+class GateType:
+    representation: str
 
-class Gate:
     def __init__(self, representation: str, matrix: np.ndarray):
         self.representation = representation
         self.matrix = matrix
 
-class UnitaryGate(Gate): # defines an arbitrary unitary gate used by the QE OpenQASM library to define all other gates
+class UnitaryGateType(GateType): # defines an arbitrary unitary gate used by the QE OpenQASM library to define all other gates
     def __init__(self, representation: str, theta: float = None, phi: float = None, lmbda: float = 0.0):
         self.representation = representation
 
@@ -42,42 +45,42 @@ class UnitaryGate(Gate): # defines an arbitrary unitary gate used by the QE Open
 
 # OpenQASM also defines the CX gate, this implementation supports all gates as controllable and therefore uses the normal X gate
 
-class HadamardGate(Gate): # todo unit test (e.g. self inverse, pauli algebra...)
+class HadamardGateType(GateType): # todo unit test (e.g. self inverse, pauli algebra...)
     def __init__(self):
         super().__init__("H", np.array([
             [1, 1],
             [1, -1]
         ]) * (1.0 / sqrt(2)))
 
-class PauliXGate(Gate):
+class PauliXGateType(GateType):
     def __init__(self):
         super().__init__("X", np.array([
             [0, 1],
             [1, 0]
         ]))
 
-class PauliYGate(Gate):
+class PauliYGateType(GateType):
     def __init__(self):
         super().__init__("Y", np.array([
             [0, -1j],
             [-1j, 0]
         ]))
 
-class PauliZGate(Gate):
+class PauliZGateType(GateType):
     def __init__(self):
         super().__init__("Z", np.array([
             [1, 0],
             [0, -1]
         ]))
 
-class PhaseGate(Gate):
+class PhaseGateType(GateType):
     def __init__(self):
         super().__init__("S", np.array([
             [1, 0],
             [0, 1j]
         ]))
 
-class TGate(Gate):
+class TGateType(GateType):
     def __init__(self):
         super().__init__("T", np.array([
             [1, 0],

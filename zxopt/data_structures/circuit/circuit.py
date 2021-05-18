@@ -1,14 +1,17 @@
+from typing import cast
+
 from zxopt.data_structures.circuit.circuit_component import CircuitComponent
 from zxopt.data_structures.circuit.register.classical_register import ClassicalRegister
 from zxopt.data_structures.circuit.register.quantum_register import QuantumRegister
 from zxopt.data_structures.circuit.register.register import RegisterBit, Register
+from zxopt.util.toolbox import flat_map
 
 
 class Circuit:
     def __init__(self):
         self.components: set[CircuitComponent] = set()
-        self.quantum_registers: set[QuantumRegister] = set()
-        self.classical_registers: set[ClassicalRegister] = set()
+        self.quantum_registers: list[QuantumRegister] = []
+        self.classical_registers: list[ClassicalRegister] = []
 
     def add_component(self, component: CircuitComponent):
         component.circuit = self
@@ -30,9 +33,9 @@ class Circuit:
 
     def add_register(self, register: Register):
         if isinstance(register, QuantumRegister):
-            self.quantum_registers.add(register)
+            self.quantum_registers.append(register)
         elif isinstance(register, ClassicalRegister):
-            self.classical_registers.add(register)
+            self.classical_registers.append(register)
         else:
             raise NotImplementedError("Unsupported register type")
         register.circuit = self
@@ -45,3 +48,18 @@ class Circuit:
         else:
             raise NotImplementedError("Unsupported register type")
         register.circuit = self
+
+    def get_registers(self) -> list[Register]:
+        return cast(list[Register], self.quantum_registers) + cast(list[Register], self.classical_registers)
+
+    def get_register_bits(self) -> list[RegisterBit]:
+        return self.get_quantum_bits() + self.get_classical_bits()
+
+    def get_quantum_bits(self) -> list[RegisterBit]:
+        return flat_map(lambda reg: reg.bits, self.quantum_registers)
+
+    def get_classical_bits(self) -> list[RegisterBit]:
+        return flat_map(lambda reg: reg.bits, self.classical_registers)
+
+    def get_register_from_bit(self, bit: RegisterBit) -> Register:
+        return list(filter(lambda reg: bit in reg, self.get_registers()))[0]

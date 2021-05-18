@@ -1,5 +1,6 @@
 import math
 from io import BytesIO
+from typing import Optional
 
 import cairo
 import gi
@@ -12,20 +13,23 @@ from zxopt.util import Loggable, display_in_notebook
 # https://www.tutorialspoint.com/pygtk/pygtk_drawingarea_class.htm
 
 class Renderer(Loggable):
+    drawing_area: Optional[Gtk.DrawingArea]
+    width: int
+    height: int
 
-    def __init__(self, drawing_area: Gtk.DrawingArea = None, width: int = 500, height: int = 300):
+    def __init__(self, width: int = 500, height: int = 300):
         super().__init__()
 
-        self.drawing_area: Gtk.DrawingArea = drawing_area
-        self.width: int = width
-        self.height: int = height
+        self.drawing_area = None
+        self.width = width
+        self.height = height
 
-        if drawing_area is not None:
-            self.on_resize()
-            drawing_area.connect("size-allocate", lambda widget, allocation: self.on_resize())
-            drawing_area.connect("draw", self.on_render_requested)
-        else:
-            pass
+    def set_drawing_area(self, drawing_area: Gtk.Widget):
+        self.drawing_area = drawing_area
+
+        self.on_resize()
+        drawing_area.connect("size-allocate", lambda widget, allocation: self.on_resize())
+        drawing_area.connect("draw", self.on_render_requested)
 
     # render requested by drawing area
     def on_render_requested(self, drawing_area: Gtk.Widget, cr: cairo.Context):
@@ -61,5 +65,4 @@ class Renderer(Loggable):
                 cr.set_source_rgb(1.0, 0.5, 0.0)
                 cr.arc(x * 40 + 50, y * 40 + 40, 18, 0, 2*math.pi)
                 cr.fill()
-
 

@@ -1,7 +1,7 @@
 
 
 __all__ = [
-    "OpenQASMParserLegacy"
+    "OpenQasmParser"
 ]
 
-from zxopt.openqasm.open_qasm_parser_legacy import OpenQASMParserLegacy
+from zxopt.openqasm.open_qasm_parser import OpenQasmParser
