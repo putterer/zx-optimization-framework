@@ -14,7 +14,7 @@ class Circuit:
         self.classical_registers: list[ClassicalRegister] = []
 
     def add_component(self, component: CircuitComponent):
-        component.circuit = self
+        component.set_circuit(self)
 
         last_affected_step = max([c.step for c in self.get_components_affecting_bits(component.affected_bits)], default=-1)
         component.step = last_affected_step + 1

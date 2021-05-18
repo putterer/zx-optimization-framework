@@ -12,6 +12,10 @@ def color(ctx: cairo.Context, hex: str):
         raise RuntimeError(f"Cannot parse color {hex}")
     ctx.set_source_rgb(int(m.group(1), 16) / 255.0, int(m.group(2), 16) / 255.0, int(m.group(3), 16) / 255.0)
 
+def normalise_tuple_vec(vec: Tuple[float, float], new_length = 1.0) -> Tuple[float, float]:
+    length = math.sqrt(vec[0] ** 2 + vec[1] ** 2)
+    return vec[0] / length * new_length, vec[1] / length * new_length
+
 def draw_line(ctx: cairo.Context, start: Tuple[float, float], end: Tuple[float, float], offset: Tuple[float, float] = (0, 0)):
     ctx.move_to(start[0] + offset[0], start[1] + offset[1])
     ctx.line_to(end[0] + offset[0], end[1] + offset[1])
