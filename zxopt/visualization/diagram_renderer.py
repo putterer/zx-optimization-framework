@@ -2,6 +2,9 @@ import math
 
 import gi
 
+from zxopt.util import is_interactive
+from zxopt.visualization.window import Window
+
 gi.require_version('Rsvg', '2.0')
 from gi.repository import Rsvg
 
@@ -24,10 +27,14 @@ TEMP_SVG_FILENAME = "diagram_render.svg"
 
 class DiagramRenderer(Renderer):
     diagram: Diagram
+    diagram_width: int
+    diagram_height: int
 
-    def __init__(self, diagram: Diagram, width: int = 500, height: int = 300):
+    def __init__(self, diagram: Diagram, width: int = 500, height: int = 300, diagram_width=400, diagram_height=250):
         super().__init__(width, height)
         self.diagram = diagram
+        self.diagram_width = diagram_width
+        self.diagram_height = diagram_height
 
     def render(self, ctx: cairo.Context):
         self.render_to_image(TEMP_SVG_FILENAME)
@@ -69,9 +76,33 @@ class DiagramRenderer(Renderer):
                    vertex_color = VERTEX_BORDER_COLOR,
                    vertex_size = 20,
                    edge_color = edge_colors,
-                   output_size = (self.width, self.height),
+                   output_size = (self.diagram_width, self.diagram_height),
                    output = filename,
                    fmt = "svg",
-                   bg_color = to_cairo_color("#FFFFFF"),
-                   inline = False
+                   bg_color = to_cairo_color("#FFFFFF") if is_interactive() else None,
+                   inline = False,
                    )
+
+### Test
+if __name__ == "__main__":
+    diagram = Diagram()
+    in1 = diagram.add_boundary("in")
+    in2 = diagram.add_boundary("in")
+    out1 = diagram.add_boundary("out")
+    out2 = diagram.add_boundary("out")
+
+    s1_1 = diagram.add_spider(0.0, "green")
+    s1_2 = diagram.add_spider(0.0, "red")
+    s2_1 = diagram.add_spider(math.pi, "red")
+
+    diagram.add_wire(in1, s1_1)
+    diagram.add_wire(in2, s1_2)
+    diagram.add_wire(s1_1, s1_2)
+    diagram.add_wire(s1_1, s2_1)
+    diagram.add_wire(s2_1, out1)
+    diagram.add_wire(s1_2, out2)
+
+    renderer = DiagramRenderer(diagram)
+
+    window = Window(renderer)
+    window.main_loop()
