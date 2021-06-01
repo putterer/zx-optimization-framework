@@ -63,3 +63,10 @@ class Circuit:
 
     def get_register_from_bit(self, bit: RegisterBit) -> Register:
         return list(filter(lambda reg: bit in reg, self.get_registers()))[0]
+
+    def step_count(self) -> int:
+        return max([c.step for c in self.components])
+
+    def get_components_by_step(self, step: int) -> list[CircuitComponent]:
+        return list(filter(lambda c: c.step == step, self.components))
+
