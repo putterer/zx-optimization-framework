@@ -34,7 +34,7 @@ class CircuitRenderer(Renderer):
         super().__init__()
         self.circuit = circuit
         self.register_bit_positions = {}
-        self.circuit_width = (max([c.step for c in self.circuit.components]) + 1.33) * STEP_SPACING
+        self.circuit_width = int((max([c.step for c in self.circuit.components]) + 1.33) * STEP_SPACING)
 
     def render(self, ctx: cairo.Context):
         ctx.select_font_face("Verdana", cairo.FONT_SLANT_NORMAL ,cairo.FONT_WEIGHT_NORMAL)
@@ -136,6 +136,8 @@ class CircuitRenderer(Renderer):
                 draw_line(ctx, (0, y - 1.5), (self.circuit_width, y - 1.5))
                 draw_line(ctx, (0, y + 1.5), (self.circuit_width, y + 1.5))
 
+
+### Test
 if __name__ == "__main__":
     circuit = OpenQasmParser().load_file("./circuits/bell_swap.qasm")
     renderer = CircuitRenderer(circuit)

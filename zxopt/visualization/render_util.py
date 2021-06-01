@@ -7,10 +7,14 @@ import cairo
 BLACK = "#000000"
 
 def color(ctx: cairo.Context, hex: str):
+    cr_col = to_cairo_color(hex)
+    ctx.set_source_rgb(cr_col[0], cr_col[1], cr_col[2])
+
+def to_cairo_color(hex: str) -> list[float]:
     m = re.match(r"#?([0-9A-Fa-f][0-9A-Fa-f])([0-9A-Fa-f][0-9A-Fa-f])([0-9A-Fa-f][0-9A-Fa-f])", hex)
     if not m:
         raise RuntimeError(f"Cannot parse color {hex}")
-    ctx.set_source_rgb(int(m.group(1), 16) / 255.0, int(m.group(2), 16) / 255.0, int(m.group(3), 16) / 255.0)
+    return [int(m.group(1), 16) / 255.0, int(m.group(2), 16) / 255.0, int(m.group(3), 16) / 255.0, 1.0]
 
 def normalise_tuple_vec(vec: Tuple[float, float], new_length = 1.0) -> Tuple[float, float]:
     length = math.sqrt(vec[0] ** 2 + vec[1] ** 2)
