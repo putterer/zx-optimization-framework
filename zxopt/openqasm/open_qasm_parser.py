@@ -183,7 +183,7 @@ class OpenQasmParser(Loggable, OpenQASMListener):
         evaluator = ExpressionEvaluator(bound_names)
         evaluated_params = [evaluator.evaluate(ctx) for ctx in params]
 
-        if name == "U" or name.upper() == "CX" or name in PREDEFINED_GATE_TYPES:
+        if name == "U" or name.upper() == "CX" or name.upper() == "CZ" or name in PREDEFINED_GATE_TYPES:
             self.apply_gate_builtin(name, evaluated_params, qargs)
         else:
             gate_declaration = self.gate_declarations[name]
@@ -200,10 +200,10 @@ class OpenQasmParser(Loggable, OpenQASMListener):
             if len(qargs) != 1:
                 raise RuntimeError(f"Expected 1 qubit for U gate, got {len(qargs)}")
             gate = GateComponent(qargs[0], UnitaryGateType("U", params[0], params[1], params[2]))
-        elif name.upper() == "CX":
+        elif name.upper() == "CX" or name.upper() == "CZ":
             if len(qargs) != 2:
-                raise RuntimeError(f"Expected 2 qubits for CX gate, got {len(qargs)}")
-            gate = GateComponent(qargs[1], PauliXGateType(), {qargs[0]})
+                raise RuntimeError(f"Expected 2 qubits for CX/CZ gate, got {len(qargs)}")
+            gate = GateComponent(qargs[1], (PauliXGateType() if name.upper() == "CX" else PauliZGateType()), {qargs[0]})
         elif name in PREDEFINED_GATE_TYPES:
             if len(qargs) != 1:
                 raise RuntimeError(f"Expected 1 qubits for {name} gate, got {len(qargs)}")

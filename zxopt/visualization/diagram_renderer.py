@@ -1,6 +1,7 @@
 import math
 
 import gi
+from graph_tool import VertexPropertyMap
 
 from zxopt.util import is_interactive
 from zxopt.visualization.window import Window
@@ -60,7 +61,10 @@ class DiagramRenderer(Renderer):
                 vertex_labels[v] = "I" if self.diagram.boundary_type_prop[v] == INPUT else "O"
                 vertex_fill_colors[v] = BOUNDARY_COLOR
             else:
-                vertex_labels[v] = str(round(self.diagram.phase_prop[v] / math.pi * 100.0) / 100.0) if self.diagram.phase_prop[v] != 0.0 else ""
+                phase = str(round(self.diagram.phase_prop[v] / math.pi * 100.0) / 100.0) if self.diagram.phase_prop[v] != 0.0 else ""
+                # if phase == "1.0":
+                #     phase = "π"
+                vertex_labels[v] = phase
                 if self.diagram.vertex_type_prop[v] == VERTEX_SPIDER_GREEN:
                     vertex_fill_colors[v] = GREEN_SPIDER_COLOR
                 else:
@@ -70,7 +74,11 @@ class DiagramRenderer(Renderer):
         for e in g.edges():
             edge_colors[e] = HADMARAD_EDGE_COLOR if self.diagram.hadamard_prop[e] else EDGE_COLOR
 
+        # vertex positions
+        vertex_pos = self.calculate_vertex_positons()
+
         graph_draw(g,
+                   pos = vertex_pos,
                    vertex_text = vertex_labels,
                    vertex_fill_color = vertex_fill_colors,
                    vertex_color = VERTEX_BORDER_COLOR,
@@ -82,6 +90,37 @@ class DiagramRenderer(Renderer):
                    bg_color = to_cairo_color("#FFFFFF") if is_interactive() else None,
                    inline = False,
                    )
+
+    def calculate_vertex_positons(self) -> VertexPropertyMap:
+        diagram = self.diagram
+        g = diagram.g
+
+        pos = g.new_vertex_property("vector<double>")
+
+        inputs = diagram.get_inputs()
+        outputs = diagram.get_outputs()
+        spiders = diagram.get_spiders()
+
+        SPACING = 100 # TODO: move
+
+        to_process = []
+
+        for v in g.vertices():
+            pos[v] = [0, 0] # TODO: what does "vector" type mean?
+
+        for input in inputs:
+            pos[input] = [0, SPACING * diagram.get_boundary_index(input)]
+            to_process.append(input)
+
+        # TODO: alignment algorithm
+        # while len(to_process) > 0:
+        #
+        # #
+
+
+        return pos
+
+
 
 ### Test
 if __name__ == "__main__":
