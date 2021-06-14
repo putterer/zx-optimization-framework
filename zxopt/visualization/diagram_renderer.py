@@ -1,7 +1,7 @@
 import math
 
 import gi
-from graph_tool import VertexPropertyMap
+from graph_tool import VertexPropertyMap, Vertex
 
 from zxopt.util import is_interactive
 from zxopt.visualization.window import Window
@@ -30,12 +30,14 @@ class DiagramRenderer(Renderer):
     diagram: Diagram
     diagram_width: int
     diagram_height: int
+    disable_alignment: bool
 
-    def __init__(self, diagram: Diagram, width: int = 500, height: int = 300, diagram_width=400, diagram_height=250):
+    def __init__(self, diagram: Diagram, width: int = 500, height: int = 300, diagram_width=400, diagram_height=250, disable_alignment=False):
         super().__init__(width, height)
         self.diagram = diagram
         self.diagram_width = diagram_width
         self.diagram_height = diagram_height
+        self.disable_alignment = disable_alignment
 
     def render(self, ctx: cairo.Context):
         self.render_to_image(TEMP_SVG_FILENAME)
@@ -75,7 +77,10 @@ class DiagramRenderer(Renderer):
             edge_colors[e] = HADMARAD_EDGE_COLOR if self.diagram.hadamard_prop[e] else EDGE_COLOR
 
         # vertex positions
-        vertex_pos = self.calculate_vertex_positons()
+        if not self.disable_alignment:
+            vertex_pos = self.calculate_vertex_positons()
+        else:
+            vertex_pos = None
 
         graph_draw(g,
                    pos = vertex_pos,
@@ -101,21 +106,93 @@ class DiagramRenderer(Renderer):
         outputs = diagram.get_outputs()
         spiders = diagram.get_spiders()
 
-        SPACING = 100 # TODO: move
+        SPACING = 50 # TODO: move
 
-        to_process = []
+        # Alignment algorithm see notes
+        # BFS
+        processed: set[Vertex] = set()
+        to_process: set[Vertex] = set()
 
-        for v in g.vertices():
-            pos[v] = [0, 0] # TODO: what does "vector" type mean?
+        # fthis = 0
+        # for v in g.vertices():
+        #     pos[v] = [fthis, fthis]
+        #     fthis += 100
 
         for input in inputs:
-            pos[input] = [0, SPACING * diagram.get_boundary_index(input)]
-            to_process.append(input)
+            pos[input] = [diagram.get_boundary_index(input), SPACING * diagram.get_boundary_index(input)]
 
-        # TODO: alignment algorithm
-        # while len(to_process) > 0:
-        #
-        # #
+            processed.add(input)
+            for n in input.all_neighbors():
+                to_process.add(n)
+
+        # alignment algorithm
+        current_step = 1
+        last_step_skipped = False
+        while len(to_process) > 0:
+
+            # if to process only contains outputs, place them
+            if all([diagram.is_output(v) for v in to_process]):
+                for output in to_process:
+                    pos[output] = [SPACING * current_step, SPACING * diagram.get_boundary_index(output)]
+
+                to_process.clear()
+                break
+
+            could_be_placed = set()
+            # for qubit_index in range(len(diagram.get_inputs())):
+            #     for spider in to_process:
+            #         if diagram.get_spider_qubit_index(spider) == qubit_index:
+            #             could_be_placed.add(spider)
+            #             break
+
+            # iterate over all canidates, only place if all other neighbors can also get placed
+            for vertex in [v for v in to_process if diagram.is_spider(v)]:
+                if vertex in could_be_placed: # skip vertex if already in placement due to neighbor getting placed
+                    continue
+
+                vertex_qubit_index = diagram.get_spider_qubit_index(vertex)
+                if len([v for v in could_be_placed if diagram.get_spider_qubit_index(v) == vertex_qubit_index]) == 0: # ensure there is no spider getting placed on this qubit already
+                    non_placed_neighbors = [v for v in vertex.all_neighbors() if v not in could_be_placed and v not in processed and diagram.is_spider(v)]
+                    non_placed_other_qubit_neighbors = [v for v in non_placed_neighbors if diagram.get_spider_qubit_index(v) != vertex_qubit_index]
+                    # those nodes could also have neighbors, but let's ignore them for now
+
+                    all_placable = True
+                    for neighbor in non_placed_other_qubit_neighbors:
+                        neighbor_qubit_index = diagram.get_spider_qubit_index(neighbor)
+                        if len([v for v in could_be_placed if diagram.get_spider_qubit_index(v) == neighbor_qubit_index]) != 0: # ensure there is no spider getting placed on this qubit already
+                            if neighbor not in to_process and not last_step_skipped: # this will block placement till this one has been discovered via a different route, gets disabled after a placement fail
+                                all_placable = False
+                                break
+
+                    if all_placable:
+                        could_be_placed.add(vertex)
+                        for n in non_placed_other_qubit_neighbors:
+                            could_be_placed.add(n)
+
+            if len(could_be_placed) == 0:
+                last_step_skipped = True
+                continue
+            else:
+                last_step_skipped = False
+
+            # place spiders
+            for spider in could_be_placed:
+                pos[spider] = [SPACING * current_step, SPACING * diagram.get_spider_qubit_index(spider)]
+
+                if spider in to_process:
+                    to_process.remove(spider)
+
+                processed.add(spider)
+                for neighbor in [v for v in spider.all_neighbors() if not v in processed and not v in to_process and not v in could_be_placed]:
+                    to_process.add(neighbor)
+
+
+            # TODO: break loops in case something goes wrong
+
+
+            current_step += 1
+
+
 
 
         return pos

@@ -95,13 +95,13 @@ class Diagram:
     def remove_boundary(self, b: Vertex):
         self.g.remove_vertex(b)
 
-    def is_spider(self, v: Vertex):
+    def is_spider(self, v: Vertex) -> bool:
         return self.vertex_type_prop[v] == VERTEX_SPIDER_GREEN or self.vertex_type_prop[v] == VERTEX_SPIDER_RED
 
-    def get_spiders(self):
+    def get_spiders(self) -> list[Vertex]:
         return [v for v in self.g.vertices() if self.is_spider(v)]
 
-    def is_boundary(self, v: Vertex):
+    def is_boundary(self, v: Vertex) -> list[Vertex]:
         return self.vertex_type_prop[v] == VERTEX_BOUNDARY
     def is_input(self, v: Vertex):
         return self.is_boundary(v) and self.boundary_type_prop[v] == INPUT
@@ -111,22 +111,22 @@ class Diagram:
     def get_boundaries(self):
         return [v for v in self.g.vertices() if self.is_boundary(v)]
 
-    def get_inputs(self):
+    def get_inputs(self) -> list[Vertex]:
         return [v for v in self.g.vertices() if self.is_input(v)]
 
-    def get_outputs(self):
+    def get_outputs(self) -> list[Vertex]:
         return [v for v in self.g.vertices() if self.is_output(v)]
 
-    def get_boundary_index(self, b: Vertex):
+    def get_boundary_index(self, b: Vertex) -> int:
         return self.boundary_qubit_indices_prop[b]
 
-    def get_spider_qubit_index(self, s: Vertex):
+    def get_spider_qubit_index(self, s: Vertex) -> int:
         return self.spider_qubit_indices_prop[s]
 
-    def is_wire_hadamard(self, e: Edge):
+    def is_wire_hadamard(self, e: Edge) -> bool:
         return self.hadamard_prop[e]
 
-    def get_spider_color(self, s: Vertex):
+    def get_spider_color(self, s: Vertex) -> str:
         return VERTEX_TYPE_TO_SPIDER_COLOR[self.vertex_type_prop[s]]
 
     def clone(self) -> "Diagram":

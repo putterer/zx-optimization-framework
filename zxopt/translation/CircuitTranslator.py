@@ -38,7 +38,7 @@ class CircuitTranslator(Loggable):
         qubits = cast(list[QuantumBit], self.circuit.get_quantum_bits())
 
         # Parse registers
-        self.input_boundaries_by_qubit = {qubit: self.diagram.add_boundary(INPUT) for qubit in qubits}
+        self.input_boundaries_by_qubit = {qubit: self.diagram.add_boundary(INPUT, self.qubit_indicies[qubit]) for qubit in qubits}
         self.current_frontier_by_qubit = self.input_boundaries_by_qubit.copy()
         self.hadamard_status_by_qubit = {qubit: False for qubit in qubits}
 
@@ -48,7 +48,7 @@ class CircuitTranslator(Loggable):
                 self.translate_component(component)
 
         # Advance to output boundaries, apply pending hadamards
-        self.output_boundaries_by_qubit = {qubit: self.diagram.add_boundary(OUTPUT) for qubit in qubits}
+        self.output_boundaries_by_qubit = {qubit: self.diagram.add_boundary(OUTPUT, self.qubit_indicies[qubit]) for qubit in qubits}
         for q in qubits:
             self.advance_frontier(self.output_boundaries_by_qubit[q], q)
 
@@ -120,7 +120,7 @@ if __name__ == "__main__":
     circuit = OpenQasmParser().load_file("./circuits/test/simple_translation_test.qasm")
     diagram = CircuitTranslator(circuit).translate()
 
-    renderer = DiagramRenderer(diagram)
+    renderer = DiagramRenderer(diagram, disable_alignment=False)
     # renderer = CircuitRenderer(circuit)
 
     window = Window(renderer)
