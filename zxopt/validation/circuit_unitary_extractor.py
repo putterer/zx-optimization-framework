@@ -14,7 +14,7 @@ class CircuitUnitaryExtractor(Loggable):
     qubit_count: int
 
     def __init__(self, circuit: Circuit):
-        super(self).__init__()
+        super(CircuitUnitaryExtractor, self).__init__()
         self.circuit = circuit
         self.qubit_count = len(circuit.get_quantum_bits())
         self.qubits = circuit.get_quantum_bits()
