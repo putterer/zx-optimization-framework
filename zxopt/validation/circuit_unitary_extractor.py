@@ -42,15 +42,16 @@ class CircuitUnitaryExtractor(Loggable):
 
             for gate in controlled_gates:
                 assert len(gate.control_bits) == 1, "Cannot deal with gates using more than one control (yet)"
+                control_bit = next(iter(gate.control_bits))
 
                 # what happens if control is 0
                 transformations_by_qubit = [np.identity(2)] * self.qubit_count
-                transformations_by_qubit[self.qubit_indicies[gate.control_bits[0]]] = PROJECTOR_ZERO
+                transformations_by_qubit[self.qubit_indicies[control_bit]] = PROJECTOR_ZERO
                 mat_not_triggered = self.kron(transformations_by_qubit)
 
                 # what happens if control is 1
                 transformations_by_qubit = [np.identity(2)] * self.qubit_count
-                transformations_by_qubit[self.qubit_indicies[gate.control_bits[0]]] = PROJECTOR_ONE
+                transformations_by_qubit[self.qubit_indicies[control_bit]] = PROJECTOR_ONE
                 transformations_by_qubit[self.qubit_indicies[gate.target_qubit]] = gate.gate_type.matrix
                 mat_triggered = self.kron(transformations_by_qubit)
 

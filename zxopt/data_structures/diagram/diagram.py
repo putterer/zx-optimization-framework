@@ -6,6 +6,8 @@ VERTEX_SPIDER_RED = "SPIDER_RED"
 SPIDER_COLOR_TO_VERTEX_TYPE = {"green": VERTEX_SPIDER_GREEN, "red": VERTEX_SPIDER_RED}
 VERTEX_TYPE_TO_SPIDER_COLOR = {SPIDER_COLOR_TO_VERTEX_TYPE[c]: c for c in SPIDER_COLOR_TO_VERTEX_TYPE}
 
+SPIDER_COLORS = {"green", "red"}
+
 INPUT = "IN"
 OUTPUT = "OUT"
 BOUNDARY_NAME_TO_TYPE = {"in": INPUT, "out": OUTPUT, "IN": INPUT, "OUT": OUTPUT}
@@ -101,6 +103,10 @@ class Diagram:
     def get_spiders(self) -> list[Vertex]:
         return [v for v in self.g.vertices() if self.is_spider(v)]
 
+    def get_spiders_by_color(self, color: str) -> list[Vertex]:
+        assert color in SPIDER_COLORS
+        return [s for s in self.get_spiders() if self.get_spider_color(s) == color]
+
     def is_boundary(self, v: Vertex) -> list[Vertex]:
         return self.vertex_type_prop[v] == VERTEX_BOUNDARY
     def is_input(self, v: Vertex):
@@ -126,8 +132,15 @@ class Diagram:
     def is_wire_hadamard(self, e: Edge) -> bool:
         return self.hadamard_prop[e]
 
+    def set_wire_hadamard(self, e: Edge, is_h: bool):
+        self.hadamard_prop[e] = is_h
+
     def get_spider_color(self, s: Vertex) -> str:
         return VERTEX_TYPE_TO_SPIDER_COLOR[self.vertex_type_prop[s]]
+
+    def set_spider_color(self, s: Vertex, color: str):
+        assert color in SPIDER_COLORS
+        self.vertex_type_prop[s] = SPIDER_COLOR_TO_VERTEX_TYPE[color]
 
     def clone(self) -> "Diagram":
         return Diagram(self.g.copy())

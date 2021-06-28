@@ -1,6 +1,7 @@
 from io import BytesIO
 from typing import TypeVar, Callable
 
+import numpy as np
 from IPython.display import display, SVG
 
 cached_is_interactive: bool = None
@@ -36,3 +37,5 @@ def flat_map(f: Callable[[T], list[S]], l: list[T]) -> list[S]:
 def flatten(l: list[list[T]]) -> list[T]:
     return flat_map(lambda x: x, l)
 
+def matrix_equality(m1: np.ndarray, m2: np.ndarray, epsilon: float = 0.00001) -> bool:
+    return (np.abs(m1 - m2) < epsilon).all()
