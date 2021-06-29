@@ -142,6 +142,9 @@ class Diagram:
         assert color in SPIDER_COLORS
         self.vertex_type_prop[s] = SPIDER_COLOR_TO_VERTEX_TYPE[color]
 
+    def get_spider_phase(self, s: Vertex):
+        return self.phase_prop[s]
+
     def clone(self) -> "Diagram":
         return Diagram(self.g.copy())
 
