@@ -1,4 +1,5 @@
 import numpy as np
+import tensornetwork
 from graph_tool import Edge, Vertex
 
 from zxopt.data_structures.circuit import HadamardGateType
@@ -27,15 +28,15 @@ class DiagramLinearExtractor(Loggable):
 
         # replace hadamard wires by nodes
         graph = diagram.g
-        hadamard_wires: list[Edge] = [w for w in graph.edges() if diagram.is_wire_hadamard()]
+        hadamard_wires: list[Edge] = [w for w in graph.edges() if diagram.is_wire_hadamard(w)]
         hadamard_nodes = []
         for wire in hadamard_wires:
-            graph.remove_edge(wire)
-
             node = graph.add_vertex(1)
             hadamard_nodes.append(node)
             graph.add_edge(wire.source(), node)
             graph.add_edge(node, wire.target())
+
+            graph.remove_edge(wire)
 
         # Calculate node tensors
         tensor_property = graph.new_vertex_property("object")
@@ -48,18 +49,18 @@ class DiagramLinearExtractor(Loggable):
             if diagram.is_spider(node): # exclude inputs/outputs
                 assert diagram.get_spider_color(node) == "green"
                 # assumes no duplicate wires
-                legs = node.all_neighbors()
+                legs = len(list(node.all_neighbors()))
                 tensor_property[node] = self.generate_z_tensor(legs, diagram.get_spider_phase(node))
 
 
         # Determine wire indices
-        edge_index_property = graph.new_edge_property("int")
+        wire_index_property = graph.new_edge_property("int")
         indexed_wires = 0
 
         wire: Edge
         for wire in graph.edges():
             if not diagram.is_boundary(wire.source()) and not diagram.is_boundary(wire.target()):
-                edge_index_property[wire] = indexed_wires
+                wire_index_property[wire] = indexed_wires + 1
                 indexed_wires += 1
 
         inputs = diagram.get_inputs()
@@ -67,27 +68,26 @@ class DiagramLinearExtractor(Loggable):
         inputs.sort(key=lambda b: diagram.get_boundary_index(b))
         outputs.sort(key=lambda b: diagram.get_boundary_index(b))
 
-        for i in range(len(inputs)): # TODO: how to order indices?
-            pass
-        for i in range(len(inputs)): # TODO: how to order indices?
-            pass
+        # Boundary wire indices
+        current_boundary_index = -1
+        for i in range(len(outputs)):
+            wire_index_property[next(outputs[i].all_edges())] = current_boundary_index
+            current_boundary_index -= 1
+        for i in range(len(inputs)):
+            wire_index_property[next(inputs[i].all_edges())] = current_boundary_index
+            current_boundary_index -= 1
 
         # TODO: call ncon with tensors and tuples of adjacent edge indices for each
+        # prepare ncon call
 
-        # tensor network
-        #
-        # → replace X by Z nodes
-        # represent spiders as tensors (one dimension per leg, dimension size = 2)
-        # represent hadamard as nodes
-        # label edges, negative labels for dangling
-        # generate tensors
-        #  --> what are inputs, what are outputs???? can probably arbitrarily align (flow through network?)
-        # contract
-        # np.einsum or https://tensornetwork.readthedocs.io/en/latest/ncon.html for contraction
+        tensor_nodes = [n for n in graph.vertices() if not diagram.is_boundary(n)]
+        tensors = [tensor_property[n] for n in tensor_nodes]
+        wires_by_tensor = [tuple([wire_index_property[wire] for wire in n.all_edges()]) for n in tensor_nodes]
 
+        contraction = tensornetwork.ncon(tensors, wires_by_tensor)
+        result = contraction.reshape((2**len(outputs), 2**len(inputs)))
 
-
-        return np.identity(2 ** self.qubit_count) # TODO: return actual matrix
+        return result # TODO: return actual matrix
 
     def generate_z_tensor(self, legs: int, phase: float) -> np.ndarray:
         assert legs < 15, f"I am not going to allocate a {legs}-dimensional tensor..."
