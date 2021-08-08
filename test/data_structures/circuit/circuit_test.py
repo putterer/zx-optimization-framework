@@ -1,6 +1,6 @@
 import unittest
 
-from zxopt.data_structures.circuit import Circuit, MeasurementComponent
+from zxopt.data_structures.circuit import Circuit, MeasurementComponent, GateComponent, PauliXGateType
 from zxopt.data_structures.circuit.register.classical_register import ClassicalRegister
 from zxopt.data_structures.circuit.register.quantum_register import QuantumRegister
 
@@ -53,25 +53,25 @@ class CircuitTest(unittest.TestCase):
         circuit = Circuit()
         qreg = QuantumRegister(2)
         creg = ClassicalRegister(2)
-        measurement1 = MeasurementComponent(qreg[0], creg[0])
-        measurement2 = MeasurementComponent(qreg[1], creg[1])
+        operation1 = GateComponent(qreg[0], PauliXGateType(), {creg[0]}) # measurements always affect everything, do not use measurements for this test :)
+        operation2 = GateComponent(qreg[1], PauliXGateType(), {creg[1]})
         circuit.add_register(qreg)
         circuit.add_register(creg)
-        circuit.add_component(measurement1)
-        circuit.add_component(measurement2)
+        circuit.add_component(operation1)
+        circuit.add_component(operation2)
 
-        self.assertIn(measurement1, circuit.get_components_affecting_bits({qreg[0]}))
-        self.assertIn(measurement1, circuit.get_components_affecting_bits({creg[0]}))
-        self.assertIn(measurement2, circuit.get_components_affecting_bits({qreg[1]}))
-        self.assertIn(measurement2, circuit.get_components_affecting_bits({creg[1]}))
+        self.assertIn(operation1, circuit.get_components_affecting_bits({qreg[0]}))
+        self.assertIn(operation1, circuit.get_components_affecting_bits({creg[0]}))
+        self.assertIn(operation2, circuit.get_components_affecting_bits({qreg[1]}))
+        self.assertIn(operation2, circuit.get_components_affecting_bits({creg[1]}))
 
-        self.assertNotIn(measurement1, circuit.get_components_affecting_bits({qreg[1]}))
-        self.assertNotIn(measurement1, circuit.get_components_affecting_bits({creg[1]}))
-        self.assertNotIn(measurement2, circuit.get_components_affecting_bits({qreg[0]}))
-        self.assertNotIn(measurement2, circuit.get_components_affecting_bits({creg[0]}))
+        self.assertNotIn(operation1, circuit.get_components_affecting_bits({qreg[1]}))
+        self.assertNotIn(operation1, circuit.get_components_affecting_bits({creg[1]}))
+        self.assertNotIn(operation2, circuit.get_components_affecting_bits({qreg[0]}))
+        self.assertNotIn(operation2, circuit.get_components_affecting_bits({creg[0]}))
 
-        self.assertIn(measurement1, circuit.get_components_affecting_bits({qreg[0],qreg[1]}))
-        self.assertIn(measurement2, circuit.get_components_affecting_bits({qreg[0],qreg[1]}))
+        self.assertIn(operation1, circuit.get_components_affecting_bits({qreg[0], qreg[1]}))
+        self.assertIn(operation2, circuit.get_components_affecting_bits({qreg[0], qreg[1]}))
 
     def test_add_components_step(self):
         circuit = Circuit()
@@ -81,12 +81,12 @@ class CircuitTest(unittest.TestCase):
         circuit.add_register(creg)
 
         for i in range(100):
-            comp = MeasurementComponent(qreg[i % 2], creg[0])
+            comp = GateComponent(qreg[i % 2], PauliXGateType(), {creg[0]})
             circuit.add_component(comp)
 
             self.assertEqual(i, comp.step)
 
-        comp = MeasurementComponent(qreg[2], creg[1])
+        comp = GateComponent(qreg[2], PauliXGateType(), {creg[1]})
         circuit.add_component(comp)
 
         self.assertEqual(0, comp.step)

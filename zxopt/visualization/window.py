@@ -1,5 +1,4 @@
 import os
-import sys
 
 import gi
 
@@ -61,7 +60,7 @@ class Window:
 
     def on_destroy(self, *args):
         Gtk.main_quit()
-        sys.exit(0)
+        # sys.exit(0)
 
     def on_window_reconfigure(self, *args):
         pass

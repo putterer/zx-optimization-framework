@@ -8,9 +8,7 @@ from zxopt.data_structures.circuit import Circuit, CircuitComponent, GateCompone
 from zxopt.data_structures.circuit.register.quantum_register import QuantumBit
 from zxopt.data_structures.diagram import Diagram
 from zxopt.data_structures.diagram.diagram import INPUT, OUTPUT
-from zxopt.openqasm import OpenQasmParser
 from zxopt.util import Loggable
-from zxopt.visualization import Window, DiagramRenderer
 
 
 class CircuitTranslator(Loggable):
@@ -114,15 +112,3 @@ class CircuitTranslator(Loggable):
         self.current_frontier_by_qubit[qubit] = new_frontier
         self.hadamard_status_by_qubit[qubit] = False
 
-
-### Test
-# Reads a simple test circuit, translates it to a diagram and renders the diagram
-if __name__ == "__main__":
-    circuit = OpenQasmParser().load_file("./circuits/test/simple_translation_test.qasm")
-    diagram = CircuitTranslator(circuit).translate()
-
-    renderer = DiagramRenderer(diagram, disable_alignment=False)
-    # renderer = CircuitRenderer(circuit)
-
-    window = Window(renderer)
-    window.main_loop()

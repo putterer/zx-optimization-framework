@@ -5,11 +5,9 @@ import cairo
 from zxopt.data_structures.circuit import Circuit, GateComponent, MeasurementComponent
 from zxopt.data_structures.circuit.register.quantum_register import QuantumBit
 from zxopt.data_structures.circuit.register.register import RegisterBit
-from zxopt.openqasm import OpenQasmParser
 from zxopt.visualization.render_util import draw_line, draw_text, ALIGN_RIGHT, BASELINE_CENTER, color, \
     fill_square, BLACK, ALIGN_CENTER, fill_circle, normalise_tuple_vec
 from zxopt.visualization.renderer import Renderer
-from zxopt.visualization.window import Window
 
 BIT_SPACING = 60
 STEP_SPACING = 60
@@ -135,13 +133,3 @@ class CircuitRenderer(Renderer):
                 ctx.set_line_width(1.0)
                 draw_line(ctx, (0, y - 1.5), (self.circuit_width, y - 1.5))
                 draw_line(ctx, (0, y + 1.5), (self.circuit_width, y + 1.5))
-
-
-### Circuit renderer test
-# Loads a bell swap circuit from QASM and displays it
-if __name__ == "__main__":
-    circuit = OpenQasmParser().load_file("./circuits/bell_swap.qasm")
-    renderer = CircuitRenderer(circuit)
-
-    window = Window(renderer)
-    window.main_loop()

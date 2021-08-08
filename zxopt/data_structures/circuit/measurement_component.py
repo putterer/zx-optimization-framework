@@ -20,4 +20,4 @@ class MeasurementComponent(CircuitComponent):
     def set_circuit(self, circuit: "Circuit"):
         super().set_circuit(circuit)
 
-        self.affected_bits = set(circuit.get_register_bits())
+        self.affected_bits = set(circuit.get_register_bits()) # measurement components acts like a barrier and affects / waits for everything

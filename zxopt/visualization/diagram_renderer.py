@@ -4,7 +4,6 @@ import gi
 from graph_tool import VertexPropertyMap, Vertex
 
 from zxopt.util import is_interactive
-from zxopt.visualization.window import Window
 
 gi.require_version('Rsvg', '2.0')
 from gi.repository import Rsvg
@@ -181,40 +180,7 @@ class DiagramRenderer(Renderer):
                 for neighbor in [v for v in spider.all_neighbors() if not v in processed and not v in to_process and not v in could_be_placed]:
                     to_process.add(neighbor)
 
-
             # TODO: break loops in case something goes wrong
-
-
             current_step += 1
 
-
-
-
         return pos
-
-
-
-### Test
-# Manually creates and renders a diagram
-if __name__ == "__main__":
-    diagram = Diagram()
-    in1 = diagram.add_boundary("in", 0)
-    in2 = diagram.add_boundary("in", 1)
-    out1 = diagram.add_boundary("out", 0)
-    out2 = diagram.add_boundary("out", 1)
-
-    s1_1 = diagram.add_spider(0.0, "green", 0)
-    s1_2 = diagram.add_spider(0.0, "red", 1)
-    s2_1 = diagram.add_spider(math.pi, "red", 0)
-
-    diagram.add_wire(in1, s1_1)
-    diagram.add_wire(in2, s1_2)
-    diagram.add_wire(s1_1, s1_2)
-    diagram.add_wire(s1_1, s2_1)
-    diagram.add_wire(s2_1, out1)
-    diagram.add_wire(s1_2, out2)
-
-    renderer = DiagramRenderer(diagram, disable_alignment=False)
-
-    window = Window(renderer)
-    window.main_loop()
