@@ -4,6 +4,7 @@ from graph_tool import Edge, Vertex
 
 from zxopt.data_structures.circuit import HadamardGateType
 from zxopt.data_structures.diagram import Diagram
+from zxopt.simplification.graph_like import GraphLikeTransformer
 from zxopt.util import Loggable
 
 HADAMARD_TENSOR = HadamardGateType().matrix
@@ -19,7 +20,8 @@ class DiagramLinearExtractor(Loggable):
 
     def extract_matrix(self):
         # replace X by Z nodes (easier to calculate tensors for)
-        diagram = GraphLikeTransformer.eliminate_red_spiders(self.diagram.clone())
+        diagram = self.diagram.clone()
+        GraphLikeTransformer().eliminate_red_spiders(diagram)
 
         # replace hadamard wires by nodes
         graph = diagram.g

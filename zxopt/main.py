@@ -1,5 +1,6 @@
 from zxopt.visualization import Window
 
+# Runs the entire application with an interactive window
 def main():
     # window = Window()
     #

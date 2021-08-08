@@ -116,6 +116,7 @@ class CircuitTranslator(Loggable):
 
 
 ### Test
+# Reads a simple test circuit, translates it to a diagram and renders the diagram
 if __name__ == "__main__":
     circuit = OpenQasmParser().load_file("./circuits/test/simple_translation_test.qasm")
     diagram = CircuitTranslator(circuit).translate()

@@ -137,7 +137,8 @@ class CircuitRenderer(Renderer):
                 draw_line(ctx, (0, y + 1.5), (self.circuit_width, y + 1.5))
 
 
-### Test
+### Circuit renderer test
+# Loads a bell swap circuit from QASM and displays it
 if __name__ == "__main__":
     circuit = OpenQasmParser().load_file("./circuits/bell_swap.qasm")
     renderer = CircuitRenderer(circuit)

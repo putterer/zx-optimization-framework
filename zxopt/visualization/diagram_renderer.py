@@ -22,7 +22,7 @@ BOUNDARY_COLOR = "#BBBBBB"
 VERTEX_BORDER_COLOR = "#333333"
 
 EDGE_COLOR = "#444444"
-HADMARAD_EDGE_COLOR = "#4444DD"
+HADAMARD_EDGE_COLOR = "#4444DD"
 
 TEMP_SVG_FILENAME = "diagram_render.svg"
 
@@ -74,7 +74,7 @@ class DiagramRenderer(Renderer):
 
         edge_colors = g.new_edge_property("string")
         for e in g.edges():
-            edge_colors[e] = HADMARAD_EDGE_COLOR if self.diagram.hadamard_prop[e] else EDGE_COLOR
+            edge_colors[e] = HADAMARD_EDGE_COLOR if self.diagram.hadamard_prop[e] else EDGE_COLOR
 
         # vertex positions
         if not self.disable_alignment:
@@ -112,11 +112,6 @@ class DiagramRenderer(Renderer):
         # BFS
         processed: set[Vertex] = set()
         to_process: set[Vertex] = set()
-
-        # fthis = 0
-        # for v in g.vertices():
-        #     pos[v] = [fthis, fthis]
-        #     fthis += 100
 
         for input in inputs:
             pos[input] = [diagram.get_boundary_index(input), SPACING * diagram.get_boundary_index(input)]
@@ -200,16 +195,17 @@ class DiagramRenderer(Renderer):
 
 
 ### Test
+# Manually creates and renders a diagram
 if __name__ == "__main__":
     diagram = Diagram()
-    in1 = diagram.add_boundary("in")
-    in2 = diagram.add_boundary("in")
-    out1 = diagram.add_boundary("out")
-    out2 = diagram.add_boundary("out")
+    in1 = diagram.add_boundary("in", 0)
+    in2 = diagram.add_boundary("in", 1)
+    out1 = diagram.add_boundary("out", 0)
+    out2 = diagram.add_boundary("out", 1)
 
-    s1_1 = diagram.add_spider(0.0, "green")
-    s1_2 = diagram.add_spider(0.0, "red")
-    s2_1 = diagram.add_spider(math.pi, "red")
+    s1_1 = diagram.add_spider(0.0, "green", 0)
+    s1_2 = diagram.add_spider(0.0, "red", 1)
+    s2_1 = diagram.add_spider(math.pi, "red", 0)
 
     diagram.add_wire(in1, s1_1)
     diagram.add_wire(in2, s1_2)
@@ -218,7 +214,7 @@ if __name__ == "__main__":
     diagram.add_wire(s2_1, out1)
     diagram.add_wire(s1_2, out2)
 
-    renderer = DiagramRenderer(diagram)
+    renderer = DiagramRenderer(diagram, disable_alignment=False)
 
     window = Window(renderer)
     window.main_loop()

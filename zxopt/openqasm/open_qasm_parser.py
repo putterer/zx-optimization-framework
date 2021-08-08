@@ -380,6 +380,8 @@ class ExpressionEvaluator:
     def any_child_node(self, search_str: str, ctx: ParserRuleContext):
         return any(map(lambda it: it.getText() == search_str, ctx.children))
 
+
+### Test
 if __name__ == "__main__":
     parser = OpenQasmParser()
     circuit = parser.load_file("circuits/test/recursion_test.qasm")
