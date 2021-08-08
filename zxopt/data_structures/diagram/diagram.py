@@ -145,6 +145,9 @@ class Diagram:
     def get_spider_phase(self, s: Vertex):
         return self.phase_prop[s]
 
+    def get_non_boundary_wires(self):
+        return [e for e in self.g.edges() if not self.is_boundary(e.source) and not self.is_boundary(e.target)]
+
     def clone(self) -> "Diagram":
         return Diagram(self.g.copy())
 

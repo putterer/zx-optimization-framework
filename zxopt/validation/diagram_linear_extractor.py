@@ -18,13 +18,8 @@ class DiagramLinearExtractor(Loggable):
         self.qubit_count = len(diagram.get_inputs())
 
     def extract_matrix(self):
-        # TODO: test step by step
         # replace X by Z nodes (easier to calculate tensors for)
-        diagram = self.diagram.clone()
-        for x_spider in diagram.get_spiders_by_color("red"):
-            diagram.set_spider_color(x_spider, "green")
-            for wire in x_spider.all_edges():
-                diagram.set_wire_hadamard(wire, not diagram.is_wire_hadamard(wire))
+        diagram = GraphLikeTransformer.eliminate_red_spiders(self.diagram.clone())
 
         # replace hadamard wires by nodes
         graph = diagram.g
@@ -77,17 +72,16 @@ class DiagramLinearExtractor(Loggable):
             wire_index_property[next(inputs[i].all_edges())] = current_boundary_index
             current_boundary_index -= 1
 
-        # TODO: call ncon with tensors and tuples of adjacent edge indices for each
         # prepare ncon call
-
         tensor_nodes = [n for n in graph.vertices() if not diagram.is_boundary(n)]
         tensors = [tensor_property[n] for n in tensor_nodes]
         wires_by_tensor = [tuple([wire_index_property[wire] for wire in n.all_edges()]) for n in tensor_nodes]
 
+        # contract tensor network
         contraction = tensornetwork.ncon(tensors, wires_by_tensor)
         result = contraction.reshape((2**len(outputs), 2**len(inputs)))
 
-        return result # TODO: return actual matrix
+        return result
 
     def generate_z_tensor(self, legs: int, phase: float) -> np.ndarray:
         assert legs < 15, f"I am not going to allocate a {legs}-dimensional tensor..."
