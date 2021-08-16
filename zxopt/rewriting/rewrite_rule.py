@@ -3,9 +3,10 @@ from typing import Optional
 from graph_tool import Graph, VertexPropertyMap, EdgePropertyMap, Vertex, Edge
 
 from zxopt.data_structures.diagram.diagram import SPIDER_COLORS
-from zxopt.rewriting.RewritePhaseExpression import RewriteVariable, RewritePhaseExpression
+from zxopt.rewriting.rewrite_phase_expression import RewriteVariable, RewritePhaseExpression
 
-RULE_SPIDER_COLORS = SPIDER_COLORS.union({"black", "white"})
+RULE_ONLY_SPIDER_COLORS = {"black", "white"}
+RULE_SPIDER_COLORS = SPIDER_COLORS.union(RULE_ONLY_SPIDER_COLORS)
 
 CONNECTING_WIRES_NONE = 0
 CONNECTING_WIRES_ANY = -1
@@ -43,8 +44,7 @@ class RewriteStructure:
     hadamard_prop: EdgePropertyMap
     variables: set[RewriteVariable]
 
-    assigned_white_spider_color: Optional[str]
-    assigned_black_spider_color: Optional[str]
+    assigned_spider_colors: dict[str, Optional[str]]
 
     def __init__(self):
         self.g = Graph(directed=False)
@@ -55,8 +55,7 @@ class RewriteStructure:
         self.hadamard_prop = self.g.new_vertex_property("bool")
 
         self.variables = set()
-        self.assigned_white_spider_color = None
-        self.assigned_black_spider_color = None
+        self.reset()  # init self.assigned_spider_colors
 
     def add_spider(self, color: str, phase: RewritePhaseExpression, connecting_wires_count: int) -> Vertex:
         assert color in RULE_SPIDER_COLORS, "Invalid spider color"
@@ -84,10 +83,35 @@ class RewriteStructure:
         self.g.remove_edge(w)
 
     """
+    Checks and resolves if the inputted color is assignable to the spider part of this rule
+    """
+    def spider_matches_color(self, spider: Vertex, color: str):
+        rule_spider_color: str = self.spider_color_prop[spider]
+        if rule_spider_color in SPIDER_COLORS:
+            return rule_spider_color == color
+        elif rule_spider_color in RULE_ONLY_SPIDER_COLORS:
+            if self.assigned_spider_colors[rule_spider_color] is None:
+                self.assigned_spider_colors[rule_spider_color] = color
+                return True
+            else:
+                return self.assigned_spider_colors[rule_spider_color] == color
+        else:
+            raise AssertionError(f"Invalid spider color {color}")
+
+    """
+    Checks and resolves if the inputted phase is assignable to the spider part of this rule
+    Sets variable values of the rule accordingly
+    """
+    def spider_matches_phase(self, spider: Vertex, phase: float):
+        rule_spider_phase_expr: RewritePhaseExpression = self.spider_phase_prop[spider]
+
+        return rule_spider_phase_expr.matches(phase)
+
+    """
     Reset assigned spider colors and phase expression variables
     """
     def reset(self):
-        self.assigned_white_spider_color = None
-        self.assigned_black_spider_color = None
+        self.assigned_spider_colors = {"white": None, "black": None}
+
         for v in self.variables:
             v.reset()

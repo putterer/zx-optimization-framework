@@ -7,5 +7,5 @@ __all__ = [
     "RewriteVariable"
 ]
 
-from zxopt.rewriting.RewritePhaseExpression import RewritePhaseExpression, RewriteVariable
-from zxopt.rewriting.RewriteRule import RewriteRule, RewriteStructure
+from zxopt.rewriting.rewrite_phase_expression import RewritePhaseExpression, RewriteVariable
+from zxopt.rewriting.rewrite_rule import RewriteRule, RewriteStructure
