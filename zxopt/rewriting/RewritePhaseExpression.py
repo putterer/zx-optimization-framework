@@ -28,13 +28,20 @@ class RewritePhaseExpression:
 
     @abc.abstractmethod
     def is_resolved(self) -> bool:
-        raise NotImplementedError
+        raise NotImplementedError()
 
     """
     Reset the expression before reuse, clearing out any set variables
     """
     def reset(self):
         pass
+
+    """
+    Return all variables in this expression
+    """
+    @abc.abstractmethod
+    def variables(self) -> set["RewriteVariable"]:
+        raise NotImplementedError()
 
 
 """
@@ -74,6 +81,9 @@ class RewriteVariable(RewritePhaseExpression):
         self.resolved = False
         self.value = 0.0
 
+    def variables(self) -> set["RewriteVariable"]:
+        return {self}
+
 class AbitraryExpression(RewritePhaseExpression):
     def evaluate(self) -> float:
         raise ValueError("Cannot evaluate abitrary expression")
@@ -83,6 +93,9 @@ class AbitraryExpression(RewritePhaseExpression):
 
     def is_resolved(self) -> bool:
         return True
+
+    def variables(self) -> set[RewriteVariable]:
+        return set()
 
 class ConstantExpression(RewritePhaseExpression):
     constant_value: float
@@ -99,6 +112,9 @@ class ConstantExpression(RewritePhaseExpression):
 
     def is_resolved(self) -> bool:
         return True
+
+    def variables(self) -> set[RewriteVariable]:
+        return set()
 
 class BinaryOperationExpression(RewritePhaseExpression):
     left_expr: RewritePhaseExpression
@@ -123,3 +139,6 @@ class BinaryOperationExpression(RewritePhaseExpression):
     def reset(self):
         self.left_expr.reset()
         self.right_expr.reset()
+
+    def variables(self) -> set[RewriteVariable]:
+        return self.left_expr.variables().union(self.right_expr.variables())

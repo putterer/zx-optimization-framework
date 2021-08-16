@@ -1,27 +1,35 @@
+from typing import Optional
 
+from graph_tool import Graph, VertexPropertyMap, EdgePropertyMap, Vertex, Edge
+
+from zxopt.data_structures.diagram.diagram import SPIDER_COLORS
+from zxopt.rewriting.RewritePhaseExpression import RewriteVariable, RewritePhaseExpression
+
+RULE_SPIDER_COLORS = SPIDER_COLORS.union({"black", "white"})
+
+CONNECTING_WIRES_NONE = 0
+CONNECTING_WIRES_ANY = -1
 
 """
 Represents a rewrite rule specifying the source and target graphs as well as their properties and variable mappings
 """
-from typing import Optional
-
-from graph_tool import Graph, VertexPropertyMap, EdgePropertyMap
-
-from zxopt.rewriting.RewritePhaseExpression import RewriteVariable
-
-
 class RewriteRule:
     structure1: "RewriteStructure"
     structure2: "RewriteStructure"
     variable_mapping: list[tuple[RewriteVariable, RewriteVariable]]
 
-    def __init__(self):
-        pass
+    def __init__(self, s1: "RewriteStructure", s2: "RewriteStructure", variable_mapping: list[tuple[RewriteVariable, RewriteVariable]]):
+        self.structure1 = s1
+        self.structure2 = s2
+        self.variable_mapping = variable_mapping
 
+    """
+    Reset all phase expression variables
+    """
+    def reset(self):
+        self.structure1.reset()
+        self.structure2.reset()
 
-# Connecting wire multiplicities
-ARBITRARY_MULTIPLICITY = -1
-NO_CONNECTING_WIRES = 0
 
 """
 Represents the source or target graph and structure of a rewrite rule
@@ -33,7 +41,7 @@ class RewriteStructure:
     spider_color_prop: VertexPropertyMap  # green, red, white, black
     spider_phase_prop: VertexPropertyMap  # phase expressions
     hadamard_prop: EdgePropertyMap
-    variables: list[RewriteVariable]
+    variables: set[RewriteVariable]
 
     assigned_white_spider_color: Optional[str]
     assigned_black_spider_color: Optional[str]
@@ -46,21 +54,34 @@ class RewriteStructure:
         self.spider_phase_prop = self.g.new_vertex_property("object")
         self.hadamard_prop = self.g.new_vertex_property("bool")
 
-        self.variables = []
+        self.variables = set()
         self.assigned_white_spider_color = None
         self.assigned_black_spider_color = None
 
-    def add_spider(self):
-        pass # Todo: also set properties correctly (from parameters)
+    def add_spider(self, color: str, phase: RewritePhaseExpression, connecting_wires_count: int) -> Vertex:
+        assert color in RULE_SPIDER_COLORS, "Invalid spider color"
 
-    def remove_spider(self):
-        pass
+        s = self.g.add_vertex()
+        self.spider_color_prop[s] = color
+        self.spider_phase_prop[s] = phase
+        self.connecting_wires_prop[s] = connecting_wires_count
 
-    def add_wire(self):
-        pass
+        for v in phase.variables():
+            self.variables.add(v)
 
-    def remove_wire(self):
-        pass
+        return s
+
+    def remove_spider(self, s: Vertex):
+        self.g.remove_vertex(s)
+        # variables NOT removed as they may be part of other spiders
+
+    def add_wire(self, s1: Vertex, s2: Vertex, is_hadamard: bool) -> Edge:
+        w = self.g.add_edge(s1, s2)
+        self.hadamard_prop[w] = is_hadamard
+        return w
+
+    def remove_wire(self, w: Edge):
+        self.g.remove_edge(w)
 
     """
     Reset assigned spider colors and phase expression variables
