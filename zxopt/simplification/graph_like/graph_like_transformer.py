@@ -3,6 +3,10 @@ from zxopt.data_structures.diagram import Diagram
 
 class GraphLikeTransformer:
 
+
+    """
+    Apply the transformation algorithm as described in "Graph-theoretic Simplification of Quantum Circuits with the ZX-calculus"
+    """
     def transform(self, diagram):
         diagram = diagram.clone()
 
