@@ -84,18 +84,6 @@ class RewriteVariable(RewritePhaseExpression):
     def variables(self) -> set["RewriteVariable"]:
         return {self}
 
-class AbitraryExpression(RewritePhaseExpression):
-    def evaluate(self) -> float:
-        raise ValueError("Cannot evaluate abitrary expression")
-
-    def matches(self, value: float, epsilon: float) -> bool:
-        return True
-
-    def is_resolved(self) -> bool:
-        return True
-
-    def variables(self) -> set[RewriteVariable]:
-        return set()
 
 class ConstantExpression(RewritePhaseExpression):
     constant_value: float
