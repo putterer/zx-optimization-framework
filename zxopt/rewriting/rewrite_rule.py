@@ -15,14 +15,14 @@ CONNECTING_WIRES_ANY = -1
 Represents a rewrite rule specifying the source and target graphs as well as their properties and variable mappings
 """
 class RewriteRule:
-    structure1: "RewriteStructure"
-    structure2: "RewriteStructure"
+    source: "RewriteStructure"
+    target: "RewriteStructure"
     variable_mapping: dict[RewriteVariable, RewriteVariable]
     connecting_wires_spider_mapping: dict[Vertex, Vertex]
 
     def __init__(self, s1: "RewriteStructure", s2: "RewriteStructure", variable_mapping: dict[RewriteVariable, RewriteVariable], connecting_wires_spider_mapping: dict[Vertex, Vertex]):
-        self.structure1 = s1
-        self.structure2 = s2
+        self.source = s1
+        self.target = s2
         self.variable_mapping = variable_mapping
         self.connecting_wires_spider_mapping = connecting_wires_spider_mapping
 
@@ -30,8 +30,8 @@ class RewriteRule:
     Reset all phase expression variables
     """
     def reset(self):
-        self.structure1.reset()
-        self.structure2.reset()
+        self.source.reset()
+        self.target.reset()
 
 
 """

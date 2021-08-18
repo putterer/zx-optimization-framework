@@ -1,38 +1,41 @@
-from typing import Generator
+from typing import Generator, Optional
 
 from graph_tool import VertexPropertyMap, Vertex
 from graph_tool.topology import subgraph_isomorphism
 
 from zxopt.data_structures.diagram import Diagram
 from zxopt.rewriting import RewriteRule, RewriteStructure
+from zxopt.rewriting.rewriter import Rewriter
 
 
 class Matcher:
     diagram: Diagram
+    rewriter: Rewriter
 
     def __init__(self, diagram: Diagram):
         self.diagram = diagram
+        self.rewriter = Rewriter(diagram)
 
     """
     Match (and applies if specified) the give rule in one direction if possible
     """
     # TODO: separate different parts into multiple functions
-    def match_rule(self, rule: RewriteRule, apply: bool = False):
-        source = rule.structure1
+    def match_rule(self, rule: RewriteRule, apply: bool = False) -> Optional[VertexPropertyMap]:
+        source = rule.source
         # search graph for subisomorphisms (generate on the fly, don't calculate all at once)
         isomorphism_generator: Generator[VertexPropertyMap] = subgraph_isomorphism(
             source.g,
             self.diagram.g,
             max_n=0,
-            edge_label=(rule.structure1.hadamard_prop, self.diagram.hadamard_prop),  # check hadamard prop
+            edge_label=(rule.source.hadamard_prop, self.diagram.hadamard_prop),  # check hadamard prop
             generator=True
         )
 
         # check those for additional properties
-        checkedCases = 0
+        checked_cases = 0
         rule_to_diagram_map: VertexPropertyMap  # maps rule.source -> diagram
         for rule_to_diagram_map in isomorphism_generator:
-            checkedCases += 1  # count for performance analysis
+            checked_cases += 1  # count for performance analysis
 
             # reset rule
             rule.reset()
@@ -45,12 +48,18 @@ class Matcher:
             if not self.__match_phases(source, rule_to_diagram_map):
                 continue
 
-
+            # check and collect connecting wires to neighbors outside of rule
             connecting_wires_match, source_spider_to_connected_diagram_neighbors_map = self.__match_connecting_wires(source, rule_to_diagram_map)
             if not connecting_wires_match:
                 continue
 
-            # TODO next: rewrite
+            # Rewrite
+            if apply:
+                self.rewriter.rewrite(rule, rule_to_diagram_map, source_spider_to_connected_diagram_neighbors_map)
+
+            return rule_to_diagram_map
+
+        return None
 
     """
     Checks and resolves all spider colors
