@@ -118,7 +118,7 @@ class RewriteStructure:
     Reset assigned spider colors and phase expression variables
     """
     def reset(self):
-        self.assigned_spider_colors = {"white": None, "black": None}
+        self.assigned_spider_colors = {"white": None, "black": None, "green": "green", "red": "red"}
 
         for v in self.variables:
             v.reset()
