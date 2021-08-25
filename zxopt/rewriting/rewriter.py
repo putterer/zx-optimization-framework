@@ -2,6 +2,7 @@ from graph_tool import Vertex, VertexPropertyMap, Edge
 
 from zxopt.data_structures.diagram import Diagram
 from zxopt.rewriting import RewriteRule, RewritePhaseExpression
+from zxopt.rewriting.matcher import ConnectingNeighbor
 
 
 class Rewriter:
@@ -10,7 +11,7 @@ class Rewriter:
     def __init__(self, diagram: Diagram):
         self.diagram = diagram
 
-    def rewrite(self, rule: RewriteRule, source_to_diagram_map: VertexPropertyMap, source_spider_to_connected_diagram_neighbors_map: dict[Vertex, list[Vertex]]):
+    def rewrite(self, rule: RewriteRule, source_to_diagram_map: VertexPropertyMap, source_spider_to_connected_diagram_neighbors_map: dict[Vertex, list[ConnectingNeighbor]]):
         source = rule.source
         target = rule.target
 
@@ -42,7 +43,7 @@ class Rewriter:
             new_phase = new_phase_expression.evaluate()
 
             # create target spider
-            new_diagram_spider = self.diagram.add_spider(phase=new_phase, color=new_color, origin_qubit_index=qubit_index) # TODO uses DEFAULT PHASE AND COLOR, SET LATER!
+            new_diagram_spider = self.diagram.add_spider(phase=new_phase, color=new_color, origin_qubit_index=qubit_index)
             target_to_diagram_map[target_spider] = new_diagram_spider
 
         # Add inner wires from target structure
@@ -58,15 +59,10 @@ class Rewriter:
         for source_spider in source_spider_to_connected_diagram_neighbors_map:
             target_spider = rule.connecting_wires_spider_mapping[source_spider]
             new_diagram_spider = target_to_diagram_map[target_spider]
+
             for connected_diagram_neighbor in source_spider_to_connected_diagram_neighbors_map[source_spider]:
-                flip_hadamard = "Who knows?" == True # TODO: based on count, how to select / how many, HOW TO KNOW?
-                old_wire_is_hadamard = "Who knows?" == True
-                new_wire_is_hadamard = old_wire_is_hadamard ^ flip_hadamard
-
-                self.diagram.add_wire(new_diagram_spider, connected_diagram_neighbor, is_hadamard=new_wire_is_hadamard)
-
-                # TODO: connecting wires hadamard prop, would require knowing if the wire had a hadmard before,
-                #  but __match_connecting_wires uses all_neighbors, therefore doesn't see all wires and their associated hadamard prop
+                new_wire_is_hadamard = connected_diagram_neighbor.is_hadamard ^ connected_diagram_neighbor.should_be_flipped
+                self.diagram.add_wire(new_diagram_spider, connected_diagram_neighbor.outer_neighbor, is_hadamard=new_wire_is_hadamard)
 
 
     def get_qubit_index_for_rewritten_spider(self, target_spider: Vertex, rule: RewriteRule, source_to_diagram_map: VertexPropertyMap) -> int:

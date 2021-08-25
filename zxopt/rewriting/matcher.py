@@ -1,6 +1,6 @@
 from typing import Generator, Optional
 
-from graph_tool import VertexPropertyMap, Vertex
+from graph_tool import VertexPropertyMap, Vertex, Edge
 from graph_tool.topology import subgraph_isomorphism
 
 from zxopt.data_structures.diagram import Diagram
@@ -84,25 +84,54 @@ class Matcher:
     Check the number of connected neigbors that are not part of the rule for each rule spider
     :returns a mapping from each rule spider to all neighboring, non rule vertices
     """
-    def __match_connecting_wires(self, source: RewriteStructure, rule_to_diagram_map: VertexPropertyMap) -> tuple[bool, dict[Vertex, list[Vertex]]]:
-        source_spider_to_connected_diagram_neighbors_map: dict[Vertex, list[Vertex]] = {}
+    def __match_connecting_wires(self, source: RewriteStructure, rule_to_diagram_map: VertexPropertyMap) -> tuple[bool, dict[Vertex, list["ConnectingNeighbor"]]]:
+        source_spider_to_connected_diagram_neighbors_map: dict[Vertex, list[ConnectingNeighbor]] = {}
 
         diagram_rule_inner_spiders = [rule_to_diagram_map[source_spider] for source_spider in source.g.vertices()]  # the inner spiders of the diagram the rule is being applied to
 
         source_spider: Vertex
-        for source_spider in source.g.vertices():
+        for source_spider_rule in source.g.vertices():
+            source_spider_diagram = rule_to_diagram_map[source_spider_rule]
             total_connections = 0
-            source_spider_to_connected_diagram_neighbors_map[source_spider] = []
+            source_spider_to_connected_diagram_neighbors_map[source_spider_rule] = []
 
-            for n in source_spider.all_neighbors():
-                if not n in diagram_rule_inner_spiders: # check if this is an outer connection?   # TODO: does this work? IT DOES NOT WORK, THIS SEARCHES KEY SPACE!
+            # for n in source_spider.all_neighbors():
+            #     if not n in diagram_rule_inner_spiders: # check if this is an outer connection?
+            #         total_connections += 1
+            #         source_spider_to_connected_diagram_neighbors_map[source_spider].append(n)
+
+            wire: Edge
+            for wire in source_spider_diagram.all_edges():
+                neighbor: Optional[Vertex] = None
+                if wire.source() != source_spider_diagram:
+                    neighbor = wire.source()
+                elif wire.target() != source_spider_diagram:
+                    neighbor = wire.target()
+                else:
+                    continue # self loop, ignore
+
+                if not neighbor in diagram_rule_inner_spiders:
                     total_connections += 1
-                    source_spider_to_connected_diagram_neighbors_map[source_spider].append(n)
+                    source_spider_to_connected_diagram_neighbors_map[source_spider_rule].append(ConnectingNeighbor(wire, neighbor, self.diagram.is_wire_hadamard(source_spider_diagram)))
 
-
-            if len(source_spider_to_connected_diagram_neighbors_map[source_spider]) > source.connecting_wires_prop[source_spider]:
+            if len(source_spider_to_connected_diagram_neighbors_map[source_spider_rule]) > source.connecting_wires_prop[source_spider_rule]:
                 return False, {}
+
+            # Mark wires to be flipped
+            for i in range(0, source.connecting_wires_hadamard_prop[source_spider_rule]):
+                source_spider_to_connected_diagram_neighbors_map[source_spider_rule][i].should_be_flipped = True
 
         return True, source_spider_to_connected_diagram_neighbors_map
 
 
+class ConnectingNeighbor:
+    wire: Edge
+    outer_neighbor: Vertex
+    is_hadamard: bool
+    should_be_flipped: bool
+
+    def __init__(self, wire: Edge, outer_neighbor: Vertex, is_hadamard: bool, should_be_flipped: bool = False):  # should be flipped may be set later
+        self.wire = wire
+        self.outer_neighbor = outer_neighbor
+        self.is_hadamard = is_hadamard
+        self.should_be_flipped = should_be_flipped
