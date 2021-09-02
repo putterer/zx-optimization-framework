@@ -136,6 +136,7 @@ class Diagram:
         self.hadamard_prop[e] = is_h
 
     def get_spider_color(self, s: Vertex) -> str:
+        assert self.vertex_type_prop[s] in VERTEX_TYPE_TO_SPIDER_COLOR, "A non spider (boundary) vertex has no color"
         return VERTEX_TYPE_TO_SPIDER_COLOR[self.vertex_type_prop[s]]
 
     def set_spider_color(self, s: Vertex, color: str):
@@ -150,4 +151,15 @@ class Diagram:
 
     def clone(self) -> "Diagram":
         return Diagram(self.g.copy())
+
+
+    """
+    Generate a map indicating for each vertex of the diagram, if it is a spider
+    Used for matching to exclude boundaries from subisomorphism
+    """
+    def generate_is_spider_property(self):
+        prop = self.g.new_vertex_property("bool")
+        for s in self.g.vertices():
+            prop[s] = self.is_spider(s)
+        return prop
 

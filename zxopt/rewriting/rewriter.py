@@ -1,4 +1,4 @@
-from graph_tool import Vertex, VertexPropertyMap, Edge
+from graph_tool import Vertex, Edge
 
 from zxopt.data_structures.diagram import Diagram
 from zxopt.rewriting import RewriteRule, RewritePhaseExpression
@@ -11,7 +11,7 @@ class Rewriter:
     def __init__(self, diagram: Diagram):
         self.diagram = diagram
 
-    def rewrite(self, rule: RewriteRule, source_to_diagram_map: VertexPropertyMap, source_spider_to_connected_diagram_neighbors_map: dict[Vertex, list[ConnectingNeighbor]]):
+    def rewrite(self, rule: RewriteRule, source_to_diagram_map: dict[Vertex, Vertex], source_spider_to_connected_diagram_neighbors_map: dict[Vertex, list[ConnectingNeighbor]]):
         source = rule.source
         target = rule.target
 
@@ -65,7 +65,7 @@ class Rewriter:
                 self.diagram.add_wire(new_diagram_spider, connected_diagram_neighbor.outer_neighbor, is_hadamard=new_wire_is_hadamard)
 
 
-    def get_qubit_index_for_rewritten_spider(self, target_spider: Vertex, rule: RewriteRule, source_to_diagram_map: VertexPropertyMap) -> int:
+    def get_qubit_index_for_rewritten_spider(self, target_spider: Vertex, rule: RewriteRule, source_to_diagram_map: dict[Vertex, Vertex]) -> int:
         source_spiders = [s for s in rule.connecting_wires_spider_mapping if rule.connecting_wires_spider_mapping[s] == target_spider]
 
         return self.diagram.get_spider_qubit_index(source_to_diagram_map[source_spiders[0]])

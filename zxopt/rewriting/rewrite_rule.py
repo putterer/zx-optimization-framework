@@ -5,7 +5,9 @@ from graph_tool import Graph, VertexPropertyMap, EdgePropertyMap, Vertex, Edge
 from zxopt.data_structures.diagram.diagram import SPIDER_COLORS
 from zxopt.rewriting.rewrite_phase_expression import RewriteVariable, RewritePhaseExpression
 
-RULE_ONLY_SPIDER_COLORS = {"black", "white", "grey"} # black / white assignable, grey arbitrary
+SPIDER_COLOR_WHITE = "white"
+SPIDER_COLOR_BLACK = "black"
+RULE_ONLY_SPIDER_COLORS = {SPIDER_COLOR_BLACK, SPIDER_COLOR_WHITE, "grey"} # black / white assignable, grey arbitrary
 RULE_SPIDER_COLORS = SPIDER_COLORS.union(RULE_ONLY_SPIDER_COLORS)
 
 CONNECTING_WIRES_NONE = 0
@@ -20,11 +22,15 @@ class RewriteRule:
     variable_mapping: dict[RewriteVariable, RewriteVariable]
     connecting_wires_spider_mapping: dict[Vertex, Vertex]
 
-    def __init__(self, s1: "RewriteStructure", s2: "RewriteStructure", variable_mapping: dict[RewriteVariable, RewriteVariable], connecting_wires_spider_mapping: dict[Vertex, Vertex]):
-        self.source = s1
-        self.target = s2
-        self.variable_mapping = variable_mapping
-        self.connecting_wires_spider_mapping = connecting_wires_spider_mapping
+    def __init__(self,
+                 s1: "RewriteStructure" = None, # welcome to python, only evaluated once
+                 s2: "RewriteStructure" = None,
+                 variable_mapping: dict[RewriteVariable, RewriteVariable] = None,
+                 connecting_wires_spider_mapping: dict[Vertex, Vertex] = None):
+        self.source = s1 if s1 is not None else RewriteStructure()
+        self.target = s2 if s2 is not None else RewriteStructure()
+        self.variable_mapping = variable_mapping if variable_mapping is not None else {}
+        self.connecting_wires_spider_mapping = connecting_wires_spider_mapping if connecting_wires_spider_mapping is not None else {}
 
     """
     Reset all phase expression variables
@@ -56,7 +62,7 @@ class RewriteStructure:
         self.connecting_wires_hadamard_prop = self.g.new_vertex_property("int")
         self.spider_color_prop = self.g.new_vertex_property("string")
         self.spider_phase_prop = self.g.new_vertex_property("object")
-        self.hadamard_prop = self.g.new_vertex_property("bool")
+        self.hadamard_prop = self.g.new_edge_property("bool")
 
         self.variables = set()
         self.reset()  # init self.assigned_spider_colors
@@ -122,3 +128,13 @@ class RewriteStructure:
 
         for v in self.variables:
             v.reset()
+
+
+    """
+    Generate a map indicating for each vertex of the diagram, if it is a spider (True for all) 
+    """
+    def generate_is_spider_property(self):
+        prop = self.g.new_vertex_property("bool")
+        for s in self.g.vertices():
+            prop[s] = True
+        return prop

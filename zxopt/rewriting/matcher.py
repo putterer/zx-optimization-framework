@@ -5,6 +5,8 @@ from graph_tool.topology import subgraph_isomorphism
 
 from zxopt.data_structures.diagram import Diagram
 from zxopt.rewriting import RewriteRule, RewriteStructure
+from zxopt.rewriting.connecting_neighbor import ConnectingNeighbor
+from zxopt.rewriting.rewrite_rule import CONNECTING_WIRES_ANY
 from zxopt.rewriting.rewriter import Rewriter
 
 
@@ -20,21 +22,26 @@ class Matcher:
     Match (and applies if specified) the give rule in one direction if possible
     """
     # TODO: separate different parts into multiple functions
-    def match_rule(self, rule: RewriteRule, apply: bool = False) -> Optional[VertexPropertyMap]:
+    def match_rule(self, rule: RewriteRule, apply: bool = False) -> Optional[dict[Vertex, Vertex]]:
         source = rule.source
         # search graph for subisomorphisms (generate on the fly, don't calculate all at once)
         isomorphism_generator: Generator[VertexPropertyMap] = subgraph_isomorphism(
             source.g,
             self.diagram.g,
             max_n=0,
+            vertex_label=(rule.source.generate_is_spider_property(), self.diagram.generate_is_spider_property()), # True if spider -> exclude boundaries
             edge_label=(rule.source.hadamard_prop, self.diagram.hadamard_prop),  # check hadamard prop
             generator=True
         )
 
         # check those for additional properties
         checked_cases = 0
-        rule_to_diagram_map: VertexPropertyMap  # maps rule.source -> diagram
-        for rule_to_diagram_map in isomorphism_generator:
+        rule_to_diagram_index_map: VertexPropertyMap  # maps rule.source -> diagram
+        for rule_to_diagram_index_map in isomorphism_generator:
+            rule_to_diagram_map: dict[Vertex, Vertex] = {}
+            for s in source.g.vertices():
+                rule_to_diagram_map[s] = self.diagram.g.vertex(rule_to_diagram_index_map[s])
+
             checked_cases += 1  # count for performance analysis
 
             # reset rule
@@ -64,7 +71,7 @@ class Matcher:
     """
     Checks and resolves all spider colors
     """
-    def __match_colors(self, source: RewriteStructure, rule_to_diagram_map: VertexPropertyMap) -> bool:
+    def __match_colors(self, source: RewriteStructure, rule_to_diagram_map: dict[Vertex, Vertex]) -> bool:
         for spider in source.g.vertices():
             if not source.spider_matches_color(spider, self.diagram.get_spider_color(rule_to_diagram_map[spider])):
                 return False
@@ -73,7 +80,7 @@ class Matcher:
     """
     Checks and resolves all spider phases
     """
-    def __match_phases(self, source: RewriteStructure, rule_to_diagram_map: VertexPropertyMap) -> bool:
+    def __match_phases(self, source: RewriteStructure, rule_to_diagram_map: dict[Vertex, Vertex]) -> bool:
         for spider in source.g.vertices():
             if not source.spider_matches_phase(spider, self.diagram.get_spider_phase(rule_to_diagram_map[spider])):
                 return False
@@ -84,7 +91,7 @@ class Matcher:
     Check the number of connected neigbors that are not part of the rule for each rule spider
     :returns a mapping from each rule spider to all neighboring, non rule vertices
     """
-    def __match_connecting_wires(self, source: RewriteStructure, rule_to_diagram_map: VertexPropertyMap) -> tuple[bool, dict[Vertex, list["ConnectingNeighbor"]]]:
+    def __match_connecting_wires(self, source: RewriteStructure, rule_to_diagram_map: dict[Vertex, Vertex]) -> tuple[bool, dict[Vertex, list["ConnectingNeighbor"]]]:
         source_spider_to_connected_diagram_neighbors_map: dict[Vertex, list[ConnectingNeighbor]] = {}
 
         diagram_rule_inner_spiders = [rule_to_diagram_map[source_spider] for source_spider in source.g.vertices()]  # the inner spiders of the diagram the rule is being applied to
@@ -114,7 +121,7 @@ class Matcher:
                     total_connections += 1
                     source_spider_to_connected_diagram_neighbors_map[source_spider_rule].append(ConnectingNeighbor(wire, neighbor, self.diagram.is_wire_hadamard(source_spider_diagram)))
 
-            if len(source_spider_to_connected_diagram_neighbors_map[source_spider_rule]) > source.connecting_wires_prop[source_spider_rule]:
+            if source.connecting_wires_prop[source_spider_rule] != CONNECTING_WIRES_ANY and len(source_spider_to_connected_diagram_neighbors_map[source_spider_rule]) > source.connecting_wires_prop[source_spider_rule]:
                 return False, {}
 
             # Mark wires to be flipped
@@ -122,16 +129,3 @@ class Matcher:
                 source_spider_to_connected_diagram_neighbors_map[source_spider_rule][i].should_be_flipped = True
 
         return True, source_spider_to_connected_diagram_neighbors_map
-
-
-class ConnectingNeighbor:
-    wire: Edge
-    outer_neighbor: Vertex
-    is_hadamard: bool
-    should_be_flipped: bool
-
-    def __init__(self, wire: Edge, outer_neighbor: Vertex, is_hadamard: bool, should_be_flipped: bool = False):  # should be flipped may be set later
-        self.wire = wire
-        self.outer_neighbor = outer_neighbor
-        self.is_hadamard = is_hadamard
-        self.should_be_flipped = should_be_flipped

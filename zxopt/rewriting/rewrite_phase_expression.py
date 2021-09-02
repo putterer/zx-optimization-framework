@@ -23,7 +23,7 @@ class RewritePhaseExpression:
     Check if the given value matches this expression
     """
     @abc.abstractmethod
-    def matches(self, value: float, epsilon: float) -> bool:
+    def matches(self, value: float, epsilon: float = 0.00001) -> bool:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -63,7 +63,7 @@ class RewriteVariable(RewritePhaseExpression):
         else:
             return self.value
 
-    def matches(self, value: float, epsilon: float) -> bool:
+    def matches(self, value: float, epsilon: float = 0.00001) -> bool:
         if self.resolved:
             return abs(value - self.value) < epsilon
         else:
@@ -95,7 +95,7 @@ class ConstantExpression(RewritePhaseExpression):
     def evaluate(self) -> float:
         return self.constant_value
 
-    def matches(self, value: float, epsilon: float) -> bool:
+    def matches(self, value: float, epsilon: float = 0.00001) -> bool:
         return abs(self.constant_value - value) < epsilon
 
     def is_resolved(self) -> bool:
@@ -118,7 +118,7 @@ class BinaryOperationExpression(RewritePhaseExpression):
     def evaluate(self) -> float:
         return self.operation(self.left_expr.evaluate(), self.right_expr.evaluate())
 
-    def matches(self, value: float, epsilon: float) -> bool:
+    def matches(self, value: float, epsilon: float = 0.00001) -> bool:
         return abs(self.evaluate() - value) < epsilon # TODO: this would be non deterministic and in its current form will prevent a such a rule from being applied in the inverse, non deterministic direction
 
     def is_resolved(self) -> bool:
