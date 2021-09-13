@@ -119,7 +119,7 @@ class Matcher:
 
                 if not neighbor in diagram_rule_inner_spiders:
                     total_connections += 1
-                    source_spider_to_connected_diagram_neighbors_map[source_spider_rule].append(ConnectingNeighbor(wire, neighbor, self.diagram.is_wire_hadamard(source_spider_diagram)))
+                    source_spider_to_connected_diagram_neighbors_map[source_spider_rule].append(ConnectingNeighbor(wire, neighbor, self.diagram.is_wire_hadamard(wire)))
 
             if source.connecting_wires_prop[source_spider_rule] != CONNECTING_WIRES_ANY and len(source_spider_to_connected_diagram_neighbors_map[source_spider_rule]) > source.connecting_wires_prop[source_spider_rule]:
                 return False, {}

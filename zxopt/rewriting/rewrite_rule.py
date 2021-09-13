@@ -20,7 +20,7 @@ class RewriteRule:
     source: "RewriteStructure"
     target: "RewriteStructure"
     variable_mapping: dict[RewriteVariable, RewriteVariable]
-    connecting_wires_spider_mapping: dict[Vertex, Vertex]
+    connecting_wires_spider_mapping: dict[Vertex, Vertex]  # a mapping from spiders of the source to the target used for transferring external, connecting wires
 
     def __init__(self,
                  s1: "RewriteStructure" = None, # welcome to python, only evaluated once

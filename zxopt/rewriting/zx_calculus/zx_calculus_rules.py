@@ -22,6 +22,8 @@ class ZXRuleSpider1(RewriteRule):
 
         self.variable_mapping[alpha_source] = alpha_target
         self.variable_mapping[beta_source] = beta_target
+        self.connecting_wires_spider_mapping[s1_source] = s_target
+        self.connecting_wires_spider_mapping[s2_source] = s_target
 
 
 # TODO

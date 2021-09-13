@@ -1,3 +1,5 @@
+from typing import Optional
+
 from graph_tool import Graph, VertexPropertyMap, Vertex, Edge, EdgePropertyMap
 
 VERTEX_BOUNDARY = "BOUNDARY"
@@ -15,6 +17,7 @@ BOUNDARY_NAME_TO_TYPE = {"in": INPUT, "out": OUTPUT, "IN": INPUT, "OUT": OUTPUT}
 class Diagram:
     g: Graph
     vertex_type_prop: VertexPropertyMap
+    vertex_identifier_prop: VertexPropertyMap  # removing vertices invalidates the identifiers from graph_tool -> assign ourselves
     phase_prop: VertexPropertyMap
     hadamard_prop: EdgePropertyMap
     boundary_type_prop: VertexPropertyMap
@@ -27,6 +30,7 @@ class Diagram:
 
         if not "vertex_type_prop" in self.g.vertex_properties:
             self.vertex_type_prop = g.new_vertex_property("string")
+            self.vertex_identifier_prop = g.new_vertex_property("string")
             self.phase_prop = g.new_vertex_property("float")
             self.hadamard_prop = g.new_edge_property("bool")
             self.boundary_type_prop = g.new_vertex_property("string")
@@ -34,6 +38,7 @@ class Diagram:
             self.spider_qubit_indices_prop = g.new_vertex_property("int")
 
             self.g.vertex_properties["vertex_type_prop"] = self.vertex_type_prop # internal property map, is included in copy() for cloning
+            self.g.vertex_properties["vertex_identifier_prop"] = self.vertex_identifier_prop
             self.g.vertex_properties["phase_prop"] = self.phase_prop
             self.g.edge_properties["hadamard_prop"] = self.hadamard_prop
             self.g.vertex_properties["boundary_type_prop"] = self.boundary_type_prop
@@ -42,6 +47,7 @@ class Diagram:
 
         else:
             self.vertex_type_prop = self.g.vertex_properties["vertex_type_prop"]
+            self.vertex_identifier_prop = self.g.vertex_properties["vertex_identifier_prop"]
             self.phase_prop = self.g.vertex_properties["phase_prop"]
             self.hadamard_prop = self.g.edge_properties["hadamard_prop"]
             self.boundary_type_prop = self.g.vertex_properties["boundary_type_prop"]
@@ -49,23 +55,31 @@ class Diagram:
             self.spider_qubit_indices_prop = self.g.vertex_properties["spider_qubit_indices_prop"]
 
 
-    def add_spider(self, phase: float = 0.0, color: str = "green", origin_qubit_index: int = None) -> Vertex:
+    def add_spider(self, phase: float = 0.0, color: str = "green", origin_qubit_index: int = None, identifier: str = None) -> Vertex:
         v = self.g.add_vertex()
         self.vertex_type_prop[v] = SPIDER_COLOR_TO_VERTEX_TYPE[color]
         self.phase_prop[v] = phase
 
         if origin_qubit_index:
             self.spider_qubit_indices_prop[v] = origin_qubit_index
+        if identifier:
+            self.vertex_identifier_prop[v] = identifier
 
         return v
 
+    def remove_spiders(self, vertices: list[Vertex]):
+        self.g.remove_vertex(vertices)
+
+    """
+    Removes a single spider from the diagram, this will invalidate other spiders!
+    
+    "Because of this, the only safe way to remove more than one vertex at once is to sort them in decreasing index order:
+    for v in reversed(sorted(del_list)):
+        g.remove_vertex(v)
+    Alternatively (and preferably), a list (or iterable) may be passed directly as the vertex parameter, and the above is performed internally (in C++)."
+    """
     def remove_spider(self, v: Vertex):
         self.g.remove_vertex(v)
-
-        # TODO: delete from property map, is this done automatically? the data structure is managed by native code
-        # del self.vertex_type_prop[v]
-        # del self.phase_prop[v]
-        del self.spider_qubit_indices_prop[v]
 
     def add_wire(self, s1: Vertex, s2: Vertex, is_hadamard: bool = False) -> Edge:
         e = self.g.add_edge(s1, s2)
@@ -84,13 +98,15 @@ class Diagram:
         else:
             raise RuntimeError("Invalid parameters")
 
-    def add_boundary(self, type: str, qubit_index: int = None) -> Vertex:
+    def add_boundary(self, type: str, qubit_index: int = None, identifier: str = None) -> Vertex:
         assert type in BOUNDARY_NAME_TO_TYPE
         v = self.g.add_vertex()
         self.vertex_type_prop[v] = VERTEX_BOUNDARY
         self.boundary_type_prop[v] = BOUNDARY_NAME_TO_TYPE[type]
         if qubit_index:
             self.boundary_qubit_indices_prop[v] = qubit_index
+        if identifier:
+            self.vertex_identifier_prop[v] = identifier
 
         return v
 
@@ -148,6 +164,13 @@ class Diagram:
 
     def get_non_boundary_wires(self):
         return [e for e in self.g.edges() if not self.is_boundary(e.source) and not self.is_boundary(e.target)]
+
+    def get_vertex_from_identifier(self, identifier: str) -> Optional[Vertex]:
+        for s in self.g.vertices():
+            if self.vertex_identifier_prop[s] == identifier:
+                return s
+        return None
+
 
     def clone(self) -> "Diagram":
         return Diagram(self.g.copy())

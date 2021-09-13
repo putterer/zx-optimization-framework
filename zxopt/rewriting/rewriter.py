@@ -22,9 +22,8 @@ class Rewriter:
             target_variable = rule.variable_mapping[source_variable]
             target_variable.resolve(source_variable.evaluate())
 
-        # remove source part in diagram
-        for spider in diagram_source_rule_spiders:
-            self.diagram.remove_spider(spider) # also removes inner as well as connecting, outer wires
+
+        # spiders are removed later as this would invalidate the vertex descriptors used for identifying connecting neighbors
 
 
         # Add new nodes based on target structure
@@ -63,6 +62,8 @@ class Rewriter:
             for connected_diagram_neighbor in source_spider_to_connected_diagram_neighbors_map[source_spider]:
                 new_wire_is_hadamard = connected_diagram_neighbor.is_hadamard ^ connected_diagram_neighbor.should_be_flipped
                 self.diagram.add_wire(new_diagram_spider, connected_diagram_neighbor.outer_neighbor, is_hadamard=new_wire_is_hadamard)
+
+        self.diagram.remove_spiders(diagram_source_rule_spiders) # also removes inner as well as connecting, outer wires
 
 
     def get_qubit_index_for_rewritten_spider(self, target_spider: Vertex, rule: RewriteRule, source_to_diagram_map: dict[Vertex, Vertex]) -> int:
