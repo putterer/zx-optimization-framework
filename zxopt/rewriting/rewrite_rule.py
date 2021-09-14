@@ -20,7 +20,9 @@ class RewriteRule:
     source: "RewriteStructure"
     target: "RewriteStructure"
     variable_mapping: dict[RewriteVariable, RewriteVariable]
-    connecting_wires_spider_mapping: dict[Vertex, Vertex]  # a mapping from spiders of the source to the target used for transferring external, connecting wires
+    connecting_wires_spider_mapping: dict[Vertex, Optional[Vertex]]  # a mapping from spiders of the source to the target used for transferring external, connecting wires
+
+    inverse_rule: "RewriteRule" # this rule's inverse, generated on demand, recursive reference
 
     def __init__(self,
                  s1: "RewriteStructure" = None, # welcome to python, only evaluated once
@@ -39,6 +41,23 @@ class RewriteRule:
         self.source.reset()
         self.target.reset()
 
+    """
+    Return this rule's inverse, THEY SHARE REWRITE VARIABLES AND COLORS IN COMMON!
+    """
+    def inverse(self):
+        if self.inverse_rule is None:
+            self.__generate_inverse()
+        return self.inverse_rule
+
+    def __generate_inverse(self):
+        self.inverse_rule = RewriteRule(
+            self.target,
+            self.source,
+            {self.variable_mapping[s]: s for s in self.variable_mapping},
+            {self.connecting_wires_spider_mapping[s]: s for s in self.connecting_wires_spider_mapping}
+        )
+
+
 
 """
 Represents the source or target graph and structure of a rewrite rule
@@ -47,7 +66,7 @@ class RewriteStructure:
     g: Graph  # spiders, inner wires
 
     connecting_wires_prop: VertexPropertyMap  # multiplicity of connecting wires by spider
-    connecting_wires_hadamard_prop: VertexPropertyMap  # number of connecting wires that contain a hadamard gate
+    connecting_wires_hadamard_prop: VertexPropertyMap  # number of connecting wires that contain a hadamard gate, NOT USED FOR MATCHING, JUST FOR FLIPPING
     spider_color_prop: VertexPropertyMap  # green, red, white, black
     spider_phase_prop: VertexPropertyMap  # phase expressions
     hadamard_prop: EdgePropertyMap

@@ -57,11 +57,20 @@ class Rewriter:
         # Connect outer wires
         for source_spider in source_spider_to_connected_diagram_neighbors_map:
             target_spider = rule.connecting_wires_spider_mapping[source_spider]
-            new_diagram_spider = target_to_diagram_map[target_spider]
+            connected_diagram_neighbors = source_spider_to_connected_diagram_neighbors_map[source_spider]
 
-            for connected_diagram_neighbor in source_spider_to_connected_diagram_neighbors_map[source_spider]:
-                new_wire_is_hadamard = connected_diagram_neighbor.is_hadamard ^ connected_diagram_neighbor.should_be_flipped
-                self.diagram.add_wire(new_diagram_spider, connected_diagram_neighbor.outer_neighbor, is_hadamard=new_wire_is_hadamard)
+            if target_spider is not None:
+                new_diagram_spider = target_to_diagram_map[target_spider]
+                for connected_diagram_neighbor in connected_diagram_neighbors:
+                    new_wire_is_hadamard = connected_diagram_neighbor.is_hadamard ^ connected_diagram_neighbor.should_be_flipped
+                    self.diagram.add_wire(new_diagram_spider, connected_diagram_neighbor.outer_neighbor, is_hadamard=new_wire_is_hadamard)
+            else:
+                # Connect outer wires if there are no spiders left in the target (e.g. ZX S2 rule)
+                for n1 in connected_diagram_neighbors:
+                    for n2 in connected_diagram_neighbors:
+                        new_wire_is_hadamard = n1.is_hadamard ^ n1.should_be_flipped ^ n2.is_hadamard ^ n2.should_be_flipped
+                        if n1 != n2:
+                            self.diagram.add_wire(n1.outer_neighbor, n2.outer_neighbor, is_hadamard=new_wire_is_hadamard)
 
         self.diagram.remove_spiders(diagram_source_rule_spiders) # also removes inner as well as connecting, outer wires
 

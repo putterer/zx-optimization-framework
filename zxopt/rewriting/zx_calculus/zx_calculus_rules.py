@@ -1,7 +1,7 @@
 from typing import Callable
 
 from zxopt.rewriting import RewriteRule, RewriteVariable
-from zxopt.rewriting.rewrite_phase_expression import BinaryOperationExpression
+from zxopt.rewriting.rewrite_phase_expression import BinaryOperationExpression, ConstantExpression
 from zxopt.rewriting.rewrite_rule import SPIDER_COLOR_WHITE, CONNECTING_WIRES_ANY
 
 OP_ADDITION: Callable = lambda a, b: a + b
@@ -25,5 +25,21 @@ class ZXRuleSpider1(RewriteRule):
         self.connecting_wires_spider_mapping[s1_source] = s_target
         self.connecting_wires_spider_mapping[s2_source] = s_target
 
+    def inverse(self):
+        raise NotImplementedError() # TODO
 
-# TODO
+
+class ZXRuleSpider2(RewriteRule):
+    def __init__(self):
+        super().__init__()
+
+        s_source = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0.0), 2, 0) # hadamard count not matched, none flipped!
+
+        self.connecting_wires_spider_mapping[s_source] = None
+
+
+class ZXRule(RewriteRule):
+    def __init__(self):
+        super().__init__()
+
+        # TODO

@@ -41,6 +41,15 @@ class MatcherRewriterTest(unittest.TestCase):
 
         show(diagram)
 
+    def test_spider_rule_2_match(self):
+        # TODO: 3 neighbors
+        # TODO phase
+        pass
+
+    def test_spider_rule_2_rewrite(self):
+        # TODO: hadamards
+        pass
+
 
 def generate_three_spider_diagram(p1: tuple[float, str], p2: tuple[float, str], p3: tuple[float, str]) -> Diagram:
     diagram = Diagram()
