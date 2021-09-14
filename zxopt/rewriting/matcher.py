@@ -23,8 +23,9 @@ class Matcher:
     The rule is reset before and contains the matched phases and colors after matching 
     """
     # TODO: separate different parts into multiple functions
-    def match_rule(self, rule: RewriteRule, apply: bool = False) -> Optional[dict[Vertex, Vertex]]:
+    def match_rule(self, rule: RewriteRule, apply: bool = False, generate_on_the_fly: bool = True) -> Optional[dict[Vertex, Vertex]]:
         source = rule.source
+
         # search graph for subisomorphisms (generate on the fly, don't calculate all at once)
         isomorphism_generator: Generator[VertexPropertyMap] = subgraph_isomorphism(
             source.g,
@@ -32,7 +33,7 @@ class Matcher:
             max_n=0,
             vertex_label=(rule.source.generate_is_spider_property(), self.diagram.generate_is_spider_property()), # True if spider -> exclude boundaries
             edge_label=(rule.source.hadamard_prop, self.diagram.hadamard_prop),  # check hadamard prop
-            generator=True
+            generator=generate_on_the_fly
         )
 
         # check those for additional properties

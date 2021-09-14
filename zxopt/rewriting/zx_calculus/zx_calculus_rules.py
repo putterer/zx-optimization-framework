@@ -37,6 +37,9 @@ class ZXRuleSpider2(RewriteRule):
 
         self.connecting_wires_spider_mapping[s_source] = None
 
+    def inverse(self):
+        raise NotImplementedError() # TODO
+
 
 class ZXRule(RewriteRule):
     def __init__(self):
