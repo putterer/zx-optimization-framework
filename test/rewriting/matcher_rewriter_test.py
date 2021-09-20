@@ -8,7 +8,7 @@ from zxopt.data_structures.diagram import Diagram
 from zxopt.rewriting import RewriteRule
 from zxopt.rewriting.matcher import Matcher
 from zxopt.rewriting.zx_calculus import ZXRuleSpider1, ZXRuleSpider2
-from zxopt.rewriting.zx_calculus.zx_calculus_rules import ZXRuleBialgebraLaw
+from zxopt.rewriting.zx_calculus.zx_calculus_rules import ZXRuleBialgebraLaw, ZXRulePiCommutation, ZXRuleColor
 from zxopt.visualization import DiagramRenderer, Window
 
 SHOW_REWRITES = True
@@ -105,11 +105,51 @@ class MatcherRewriterTest(unittest.TestCase):
         diagram = generate_bialegbra_law_diagram((0.0, "green"), (0.0, "green"), (0.0, "red"), (0.0, "green"), internal_wiring=(True, True, False, True))
         self.assertFalse(rule_matches(diagram, ZXRuleBialgebraLaw()))
 
-        # TODO: hadamard
-        # TODO: missing wire
-        # phase
-        pass #TODO
+        pass
 
+    def test_bialgebra_law_rewrite(self):
+        diagram = generate_bialegbra_law_diagram((0.0, "green"), (0.0, "green"), (0.0, "red"), (0.0, "red"))
+        diagram.set_wire_hadamard(next(diagram.get_vertex_from_identifier("b_in1").all_edges()), True)
+
+        show(diagram)
+        rewrite(diagram, ZXRuleBialgebraLaw())
+        show(diagram)
+
+
+    def test_pi_comm_matches(self):
+        diagram = generate_three_spider_diagram((1.0 * pi, "red"), (0.25 * pi, "green"), (0.5 * pi, "red"), hadamard=(True, False, False, False))
+        self.assertTrue(rule_matches(diagram, ZXRulePiCommutation()))
+
+        diagram = generate_three_spider_diagram((1.0 * pi, "red"), (0.25 * pi, "red"), (0.5 * pi, "red"), hadamard=(True, False, False, False)) # color fail
+        self.assertFalse(rule_matches(diagram, ZXRulePiCommutation()))
+
+        diagram = generate_three_spider_diagram((0.75 * pi, "red"), (0.25 * pi, "green"), (0.5 * pi, "red"), hadamard=(True, False, False, False)) # phase fail
+        self.assertFalse(rule_matches(diagram, ZXRulePiCommutation()))
+
+        diagram = generate_three_spider_diagram((1.0 * pi, "red"), (0.25 * pi, "green"), (0.5 * pi, "red"), hadamard=(False, True, False, False)) # hadamard fail
+        self.assertFalse(rule_matches(diagram, ZXRulePiCommutation()))
+
+    def test_pi_comm_rewrite(self):
+        diagram = generate_three_spider_diagram((1.0 * pi, "red"), (0.25 * pi, "green"), (0.5 * pi, "red"), hadamard=(True, False, False, False))
+
+        show(diagram)
+        rewrite(diagram, ZXRulePiCommutation())
+        b_in, b_out, s1, s2, s3 = get_three_spider_diagram_vertices(diagram)
+        # w01 = self.assert_wire(b_in, s1)
+        # self.assertTrue(diagram.is_wire_hadamard(w01))
+
+        show(diagram) # Not verifying the 2 new spiders, check manually!
+
+    def test_color_rule_matches(self):
+        diagram = generate_three_spider_diagram((1.0 * pi, "red"), (0.5 * pi, "green"), (0.25 * pi, "red"), hadamard=(True, False, False, False))
+        self.assertTrue(rule_matches(diagram, ZXRuleColor()))
+
+    def test_color_rule_rewrite(self):
+        diagram = generate_three_spider_diagram((1.0 * pi, "red"), (0.5 * pi, "green"), (0.25 * pi, "red"), hadamard=(True, False, True, False))
+
+        show(diagram)
+        rewrite(diagram, ZXRuleColor())
+        show(diagram)
 
 def generate_three_spider_diagram(p1: Tuple[float, str], p2: Tuple[float, str], p3: Tuple[float, str], star_topology: bool = False, hadamard: Tuple[bool, bool, bool, bool] = (False, False, False, False)) -> Diagram:
     diagram = Diagram()

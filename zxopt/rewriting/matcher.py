@@ -31,8 +31,8 @@ class Matcher:
             source.g,
             self.diagram.g,
             max_n=0,
-            # vertex_label=(rule.source.generate_is_spider_property(), self.diagram.generate_is_spider_property()), # True if spider -> exclude boundaries
-            # edge_label=(rule.source.hadamard_prop, self.diagram.hadamard_prop),  # check hadamard prop
+            vertex_label=(rule.source.generate_is_spider_property(), self.diagram.generate_is_spider_property()), # True if spider -> exclude boundaries
+            edge_label=(rule.source.hadamard_prop, self.diagram.hadamard_prop),  # check hadamard prop
             generator=generate_on_the_fly
         )
 
@@ -128,6 +128,8 @@ class Matcher:
 
             # Mark wires to be flipped
             for i in range(0, source.connecting_wires_hadamard_prop[source_spider_rule]):
+                if i >= len(source_spider_to_connected_diagram_neighbors_map[source_spider_rule]):
+                    break
                 source_spider_to_connected_diagram_neighbors_map[source_spider_rule][i].should_be_flipped = True
 
         return True, source_spider_to_connected_diagram_neighbors_map

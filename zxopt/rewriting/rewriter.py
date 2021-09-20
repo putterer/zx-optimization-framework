@@ -3,8 +3,10 @@ from typing import Dict, List
 from graph_tool import Vertex, Edge
 
 from zxopt.data_structures.diagram import Diagram
+from zxopt.data_structures.diagram.diagram import OTHER_SPIDER_COLOR
 from zxopt.rewriting import RewriteRule, RewritePhaseExpression
 from zxopt.rewriting.matcher import ConnectingNeighbor
+from zxopt.rewriting.rewrite_rule import SPIDER_COLOR_WHITE, SPIDER_COLOR_BLACK
 
 
 class Rewriter:
@@ -23,6 +25,12 @@ class Rewriter:
         for source_variable in rule.variable_mapping:
             target_variable = rule.variable_mapping[source_variable]
             target_variable.resolve(source_variable.evaluate())
+
+        # resolve unknown colors
+        if rule.source.assigned_spider_colors[SPIDER_COLOR_WHITE] is None and rule.source.assigned_spider_colors[SPIDER_COLOR_BLACK] is not None:
+            rule.source.assigned_spider_colors[SPIDER_COLOR_WHITE] = OTHER_SPIDER_COLOR[rule.source.assigned_spider_colors[SPIDER_COLOR_BLACK]]
+        if rule.source.assigned_spider_colors[SPIDER_COLOR_BLACK] is None and rule.source.assigned_spider_colors[SPIDER_COLOR_WHITE] is not None:
+            rule.source.assigned_spider_colors[SPIDER_COLOR_BLACK] = OTHER_SPIDER_COLOR[rule.source.assigned_spider_colors[SPIDER_COLOR_WHITE]]
 
 
         # spiders are removed later as this would invalidate the vertex descriptors used for identifying connecting neighbors

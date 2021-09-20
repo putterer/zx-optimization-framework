@@ -1,5 +1,6 @@
 from typing import Optional, List
 
+import numpy as np
 from graph_tool import Graph, VertexPropertyMap, Vertex, Edge, EdgePropertyMap
 
 VERTEX_BOUNDARY = "BOUNDARY"
@@ -9,6 +10,7 @@ SPIDER_COLOR_TO_VERTEX_TYPE = {"green": VERTEX_SPIDER_GREEN, "red": VERTEX_SPIDE
 VERTEX_TYPE_TO_SPIDER_COLOR = {SPIDER_COLOR_TO_VERTEX_TYPE[c]: c for c in SPIDER_COLOR_TO_VERTEX_TYPE}
 
 SPIDER_COLORS = {"green", "red"}
+OTHER_SPIDER_COLOR = {"red": "green", "green": "red"}
 
 INPUT = "IN"
 OUTPUT = "OUT"
@@ -58,7 +60,7 @@ class Diagram:
     def add_spider(self, phase: float = 0.0, color: str = "green", origin_qubit_index: int = None, identifier: str = None) -> Vertex:
         v = self.g.add_vertex()
         self.vertex_type_prop[v] = SPIDER_COLOR_TO_VERTEX_TYPE[color]
-        self.phase_prop[v] = phase
+        self.phase_prop[v] = np.mod(phase, np.pi * 2.0)
 
         if origin_qubit_index:
             self.spider_qubit_indices_prop[v] = origin_qubit_index
