@@ -68,8 +68,12 @@ class Rewriter:
                     self.diagram.add_wire(new_diagram_spider, connected_diagram_neighbor.outer_neighbor, is_hadamard=new_wire_is_hadamard)
             else:
                 # Connect outer wires if there are no spiders left in the target (e.g. ZX S2 rule)
-                for n1 in connected_diagram_neighbors:
-                    for n2 in connected_diagram_neighbors:
+                # ONLY DO THIS ONCE PER PAIR, otherwise will yield duplicate wires
+
+                for i1 in range(len(connected_diagram_neighbors)):
+                    for i2 in range(i1 + 1, len(connected_diagram_neighbors)):
+                        n1 = connected_diagram_neighbors[i1]
+                        n2 = connected_diagram_neighbors[i2]
                         new_wire_is_hadamard = n1.is_hadamard ^ n1.should_be_flipped ^ n2.is_hadamard ^ n2.should_be_flipped
                         if n1 != n2:
                             self.diagram.add_wire(n1.outer_neighbor, n2.outer_neighbor, is_hadamard=new_wire_is_hadamard)
