@@ -8,6 +8,7 @@ from zxopt.rewriting.rewrite_phase_expression import RewriteVariable, RewritePha
 SPIDER_COLOR_WHITE = "white"
 SPIDER_COLOR_BLACK = "black"
 RULE_ONLY_SPIDER_COLORS = {SPIDER_COLOR_BLACK, SPIDER_COLOR_WHITE, "grey"} # black / white assignable, grey arbitrary
+OTHER_RULE_ONLY_SPIDER_COLOR = {SPIDER_COLOR_BLACK: SPIDER_COLOR_WHITE, SPIDER_COLOR_WHITE: SPIDER_COLOR_BLACK}
 RULE_SPIDER_COLORS = SPIDER_COLORS.union(RULE_ONLY_SPIDER_COLORS)
 
 CONNECTING_WIRES_NONE = 0
@@ -117,11 +118,14 @@ class RewriteStructure:
     """
     def spider_matches_color(self, spider: Vertex, color: str):
         rule_spider_color: str = self.spider_color_prop[spider]
-        if rule_spider_color in SPIDER_COLORS:
+        if rule_spider_color in SPIDER_COLORS: # green, red
             return rule_spider_color == color
         elif rule_spider_color == "grey":
             return True
         elif rule_spider_color in RULE_ONLY_SPIDER_COLORS:
+            if OTHER_RULE_ONLY_SPIDER_COLOR[rule_spider_color] is not None and self.assigned_spider_colors[OTHER_RULE_ONLY_SPIDER_COLOR[rule_spider_color]] == color: # grey and white need to be different color
+                return False
+
             if self.assigned_spider_colors[rule_spider_color] is None:
                 self.assigned_spider_colors[rule_spider_color] = color
                 return True

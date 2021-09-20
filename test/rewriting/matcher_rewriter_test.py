@@ -8,6 +8,7 @@ from zxopt.data_structures.diagram import Diagram
 from zxopt.rewriting import RewriteRule
 from zxopt.rewriting.matcher import Matcher
 from zxopt.rewriting.zx_calculus import ZXRuleSpider1, ZXRuleSpider2
+from zxopt.rewriting.zx_calculus.zx_calculus_rules import ZXRuleBialgebraLaw
 from zxopt.visualization import DiagramRenderer, Window
 
 SHOW_REWRITES = True
@@ -86,6 +87,27 @@ class MatcherRewriterTest(unittest.TestCase):
         # show(diagram)
 
     def test_bialgebra_law_matches(self):
+        diagram = generate_bialegbra_law_diagram((0.0, "green"), (0.0, "green"), (0.0, "red"), (0.0, "red"))
+        self.assertTrue(rule_matches(diagram, ZXRuleBialgebraLaw()))
+
+        diagram = generate_bialegbra_law_diagram((0.0, "green"), (0.0, "green"), (0.0, "red"), (0.0, "green"))
+        self.assertFalse(rule_matches(diagram, ZXRuleBialgebraLaw()))
+
+        diagram = generate_bialegbra_law_diagram((0.0, "green"), (0.0, "green"), (0.0, "green"), (0.0, "green"))
+        self.assertFalse(rule_matches(diagram, ZXRuleBialgebraLaw()))
+
+        diagram = generate_bialegbra_law_diagram((0.0, "green"), (0.1 * pi, "green"), (0.0, "red"), (0.0, "red"))
+        self.assertFalse(rule_matches(diagram, ZXRuleBialgebraLaw()))
+
+        diagram = generate_bialegbra_law_diagram((0.0, "green"), (0.0, "green"), (0.0, "red"), (0.0, "green"), hadamard=(False, True, False, False))
+        self.assertFalse(rule_matches(diagram, ZXRuleBialgebraLaw()))
+
+        diagram = generate_bialegbra_law_diagram((0.0, "green"), (0.0, "green"), (0.0, "red"), (0.0, "green"), internal_wiring=(True, True, False, True))
+        self.assertFalse(rule_matches(diagram, ZXRuleBialgebraLaw()))
+
+        # TODO: hadamard
+        # TODO: missing wire
+        # phase
         pass #TODO
 
 
@@ -107,6 +129,37 @@ def generate_three_spider_diagram(p1: Tuple[float, str], p2: Tuple[float, str], 
 
 def get_three_spider_diagram_vertices(diagram: Diagram) -> Tuple[Vertex, Vertex, Vertex, Vertex, Vertex]:
     return diagram.get_vertex_from_identifier("b_in"), diagram.get_vertex_from_identifier("b_out"), diagram.get_vertex_from_identifier("s1"), diagram.get_vertex_from_identifier("s2"), diagram.get_vertex_from_identifier("s3")
+
+def generate_bialegbra_law_diagram(p11: Tuple[float, str], p12: Tuple[float, str], p21: Tuple[float, str], p22: Tuple[float, str], internal_wiring: Tuple[bool, bool, bool, bool] = (True, True, True, True), hadamard: Tuple[bool, bool, bool, bool] = (False, False, False, False)):
+    diagram = Diagram()
+    b_in1 = diagram.add_boundary("in", 0, "b_in1")
+    b_in2 = diagram.add_boundary("in", 1, "b_in2")
+    b_out1 = diagram.add_boundary("out", 0, "b_out1")
+    b_out2 = diagram.add_boundary("out", 1, "b_out2")
+
+    s11 = diagram.add_spider(p11[0], p11[1], 0, "s11")
+    s12 = diagram.add_spider(p12[0], p12[1], 1, "s12")
+    s21 = diagram.add_spider(p21[0], p21[1], 0, "s21")
+    s22 = diagram.add_spider(p22[0], p22[1], 1, "s22")
+
+    diagram.add_wire(b_in1, s11)
+    diagram.add_wire(b_in2, s12)
+    diagram.add_wire(s21, b_out1)
+    diagram.add_wire(s22, b_out2)
+
+    if internal_wiring[0]:
+        diagram.add_wire(s11, s21, hadamard[0])
+    if internal_wiring[1]:
+        diagram.add_wire(s11, s22, hadamard[1])
+    if internal_wiring[2]:
+        diagram.add_wire(s12, s21, hadamard[2])
+    if internal_wiring[3]:
+        diagram.add_wire(s12, s22, hadamard[3])
+
+    return diagram
+
+def get_bialgebra_law_diagram_vertices(diagram: Diagram) -> Tuple[Vertex, Vertex, Vertex, Vertex]:
+    return diagram.get_vertex_from_identifier("s11"), diagram.get_vertex_from_identifier("s12"), diagram.get_vertex_from_identifier("s21"), diagram.get_vertex_from_identifier("s22")
 
 
 def rule_matches(diagram: Diagram, rule: RewriteRule, generate_on_the_fly: bool = GENERATE_ISOMORPHISMS_ON_THE_FLY) -> bool:

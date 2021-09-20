@@ -31,8 +31,8 @@ class Matcher:
             source.g,
             self.diagram.g,
             max_n=0,
-            vertex_label=(rule.source.generate_is_spider_property(), self.diagram.generate_is_spider_property()), # True if spider -> exclude boundaries
-            edge_label=(rule.source.hadamard_prop, self.diagram.hadamard_prop),  # check hadamard prop
+            # vertex_label=(rule.source.generate_is_spider_property(), self.diagram.generate_is_spider_property()), # True if spider -> exclude boundaries
+            # edge_label=(rule.source.hadamard_prop, self.diagram.hadamard_prop),  # check hadamard prop
             generator=generate_on_the_fly
         )
 

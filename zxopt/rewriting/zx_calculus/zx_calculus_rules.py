@@ -51,13 +51,17 @@ class ZXRuleBialgebraLaw(RewriteRule):
         s22_source = self.source.add_spider(SPIDER_COLOR_BLACK, ConstantExpression(0.0), 1, 0)
         w1_source = self.source.add_wire(s11_source, s21_source, is_hadamard=False)
         w2_source = self.source.add_wire(s11_source, s22_source, is_hadamard=False)
-        w3_source = self.source.add_wire(s11_source, s21_source, is_hadamard=False)
-        w4_source = self.source.add_wire(s11_source, s22_source, is_hadamard=False)
+        w3_source = self.source.add_wire(s12_source, s21_source, is_hadamard=False)
+        w4_source = self.source.add_wire(s12_source, s22_source, is_hadamard=False)
 
-        s1_target = self.source.add_spider()
+        s1_target = self.target.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0.0), 1, 0)
+        s2_target = self.target.add_spider(SPIDER_COLOR_BLACK, ConstantExpression(0.0), 1, 0)
+        w1_target = self.target.add_wire(s1_target, s2_target, is_hadamard=False)
 
-        self.connecting_wires_spider_mapping[s11_source] = s_target
-        self.connecting_wires_spider_mapping[s2_source] = s_target
+        self.connecting_wires_spider_mapping[s11_source] = s1_target
+        self.connecting_wires_spider_mapping[s12_source] = s1_target
+        self.connecting_wires_spider_mapping[s21_source] = s2_target
+        self.connecting_wires_spider_mapping[s22_source] = s2_target
 
     def inverse(self):
         raise NotImplementedError() # TODO
