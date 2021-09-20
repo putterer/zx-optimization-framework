@@ -11,9 +11,12 @@ from zxopt.rewriting.zx_calculus import ZXRuleSpider1, ZXRuleSpider2
 from zxopt.visualization import DiagramRenderer, Window
 
 SHOW_REWRITES = True
-GENERATE_ISOMORPHISMS_ON_THE_FLY = False
+GENERATE_ISOMORPHISMS_ON_THE_FLY = True
 
 class MatcherRewriterTest(unittest.TestCase):
+
+    def assert_wire(self, s1: Vertex, s2: Vertex):
+        self.assertEqual(1, len(list(filter(lambda x: x == s2, s1.all_neighbors()))))
 
     def test_spider_rule_1_match(self):
         diagram = generate_three_spider_diagram((1.0 * pi, "green"), (0.5 * pi, "red"), (0.25 * pi, "red"))
@@ -53,12 +56,28 @@ class MatcherRewriterTest(unittest.TestCase):
         diagram = generate_three_spider_diagram((1.0*pi, "green"), (1.0*pi, "red"), (0.1*pi, "red"))
         self.assertFalse(rule_matches(diagram, ZXRuleSpider2()))
 
-        diagram = generate_three_spider_diagram((1.0*pi, "green"), (1.0*pi, "red"), (0.1*pi, "red"))
-        # TODO: 3 neighbors
+        # Test for spider with 3 neighbors
+        diagram = generate_three_spider_diagram((1.0*pi, "red"), (0.0*pi, "red"), (0.1*pi, "red"))
+        b_in, b_out, s1, s2, s3 = get_three_spider_diagram_vertices(diagram)
+        s4 = diagram.add_spider(0.5 * pi, "red", 1)
+        diagram.add_wire(s2, s4)
+        # show(diagram)
+        self.assertFalse(rule_matches(diagram, ZXRuleSpider2()))
 
     def test_spider_rule_2_rewrite(self):
+        diagram = generate_three_spider_diagram((1.0 * pi, "green"), (0.0 * pi, "red"), (1.0 * pi, "green"))
+        rewrite(diagram, ZXRuleSpider2())
+        b_in, b_out, s1, s2, s3 = get_three_spider_diagram_vertices(diagram)
+
+
+        self.assertTrue(s2 is None)
+        self.assertEqual(2, len(diagram.get_spiders()))
+        self.assert_wire(s1, s3)
+
+        show(diagram)
+
+
         # TODO: hadamards
-        pass
 
 
 def generate_three_spider_diagram(p1: Tuple[float, str], p2: Tuple[float, str], p3: Tuple[float, str], star_topology: bool = False) -> Diagram:

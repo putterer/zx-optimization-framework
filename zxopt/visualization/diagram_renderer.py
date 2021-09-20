@@ -1,4 +1,5 @@
 import math
+from typing import Set
 
 import gi
 from graph_tool import VertexPropertyMap, Vertex
