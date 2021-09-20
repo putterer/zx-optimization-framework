@@ -1,4 +1,4 @@
-from typing import Generator, Optional
+from typing import Generator, Optional, Dict, List, Tuple
 
 from graph_tool import VertexPropertyMap, Vertex, Edge
 from graph_tool.topology import subgraph_isomorphism
@@ -23,7 +23,7 @@ class Matcher:
     The rule is reset before and contains the matched phases and colors after matching 
     """
     # TODO: separate different parts into multiple functions
-    def match_rule(self, rule: RewriteRule, apply: bool = False, generate_on_the_fly: bool = True) -> Optional[dict[Vertex, Vertex]]:
+    def match_rule(self, rule: RewriteRule, apply: bool = False, generate_on_the_fly: bool = True) -> Optional[Dict[Vertex, Vertex]]:
         source = rule.source
 
         # search graph for subisomorphisms (generate on the fly, don't calculate all at once)
@@ -40,7 +40,7 @@ class Matcher:
         checked_cases = 0
         rule_to_diagram_index_map: VertexPropertyMap  # maps rule.source -> diagram
         for rule_to_diagram_index_map in isomorphism_generator:
-            rule_to_diagram_map: dict[Vertex, Vertex] = {}
+            rule_to_diagram_map: Dict[Vertex, Vertex] = {}
             for s in source.g.vertices():
                 rule_to_diagram_map[s] = self.diagram.g.vertex(rule_to_diagram_index_map[s])
 
@@ -73,7 +73,7 @@ class Matcher:
     """
     Checks and resolves all spider colors
     """
-    def __match_colors(self, source: RewriteStructure, rule_to_diagram_map: dict[Vertex, Vertex]) -> bool:
+    def __match_colors(self, source: RewriteStructure, rule_to_diagram_map: Dict[Vertex, Vertex]) -> bool:
         for spider in source.g.vertices():
             if not source.spider_matches_color(spider, self.diagram.get_spider_color(rule_to_diagram_map[spider])):
                 return False
@@ -82,7 +82,7 @@ class Matcher:
     """
     Checks and resolves all spider phases
     """
-    def __match_phases(self, source: RewriteStructure, rule_to_diagram_map: dict[Vertex, Vertex]) -> bool:
+    def __match_phases(self, source: RewriteStructure, rule_to_diagram_map: Dict[Vertex, Vertex]) -> bool:
         for spider in source.g.vertices():
             if not source.spider_matches_phase(spider, self.diagram.get_spider_phase(rule_to_diagram_map[spider])):
                 return False
@@ -93,8 +93,8 @@ class Matcher:
     Check the number of connected neigbors that are not part of the rule for each rule spider
     :returns a mapping from each rule spider to all neighboring, non rule vertices
     """
-    def __match_connecting_wires(self, source: RewriteStructure, rule_to_diagram_map: dict[Vertex, Vertex]) -> tuple[bool, dict[Vertex, list["ConnectingNeighbor"]]]:
-        source_spider_to_connected_diagram_neighbors_map: dict[Vertex, list[ConnectingNeighbor]] = {}
+    def __match_connecting_wires(self, source: RewriteStructure, rule_to_diagram_map: Dict[Vertex, Vertex]) -> Tuple[bool, Dict[Vertex, List["ConnectingNeighbor"]]]:
+        source_spider_to_connected_diagram_neighbors_map: Dict[Vertex, List[ConnectingNeighbor]] = {}
 
         diagram_rule_inner_spiders = [rule_to_diagram_map[source_spider] for source_spider in source.g.vertices()]  # the inner spiders of the diagram the rule is being applied to
 

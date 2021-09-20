@@ -1,4 +1,5 @@
 from math import sqrt, pi
+from typing import Set
 
 import numpy as np
 
@@ -10,10 +11,10 @@ from zxopt.util.toolbox import round_complex
 
 class GateComponent(CircuitComponent):
     target_qubit: QuantumBit
-    control_bits: set[RegisterBit]
+    control_bits: Set[RegisterBit]
     gate_type: "GateType"
 
-    def __init__(self, target_qubit: QuantumBit, gate_type: "GateType", control_bits: set[RegisterBit] = frozenset()):
+    def __init__(self, target_qubit: QuantumBit, gate_type: "GateType", control_bits: Set[RegisterBit] = frozenset()):
         super().__init__(control_bits.union({target_qubit}))
 
         self.target_qubit = target_qubit

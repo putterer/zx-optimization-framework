@@ -1,5 +1,6 @@
 import unittest
 from math import pi
+from typing import Tuple
 
 from graph_tool import Vertex
 
@@ -9,7 +10,7 @@ from zxopt.rewriting.matcher import Matcher
 from zxopt.rewriting.zx_calculus import ZXRuleSpider1, ZXRuleSpider2
 from zxopt.visualization import DiagramRenderer, Window
 
-SHOW_REWRITES = False
+SHOW_REWRITES = True
 GENERATE_ISOMORPHISMS_ON_THE_FLY = False
 
 class MatcherRewriterTest(unittest.TestCase):
@@ -60,7 +61,7 @@ class MatcherRewriterTest(unittest.TestCase):
         pass
 
 
-def generate_three_spider_diagram(p1: tuple[float, str], p2: tuple[float, str], p3: tuple[float, str], star_topology: bool = False) -> Diagram:
+def generate_three_spider_diagram(p1: Tuple[float, str], p2: Tuple[float, str], p3: Tuple[float, str], star_topology: bool = False) -> Diagram:
     diagram = Diagram()
     b_in = diagram.add_boundary("in", 0, "b_in")
     b_out = diagram.add_boundary("out", 0, "b_out")
@@ -76,7 +77,7 @@ def generate_three_spider_diagram(p1: tuple[float, str], p2: tuple[float, str], 
         diagram.add_wire(s2, b_out)
     return diagram
 
-def get_three_spider_diagram_vertices(diagram: Diagram) -> tuple[Vertex, Vertex, Vertex, Vertex, Vertex]:
+def get_three_spider_diagram_vertices(diagram: Diagram) -> Tuple[Vertex, Vertex, Vertex, Vertex, Vertex]:
     return diagram.get_vertex_from_identifier("b_in"), diagram.get_vertex_from_identifier("b_out"), diagram.get_vertex_from_identifier("s1"), diagram.get_vertex_from_identifier("s2"), diagram.get_vertex_from_identifier("s3")
 
 

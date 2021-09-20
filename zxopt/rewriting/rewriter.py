@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 from graph_tool import Vertex, Edge
 
 from zxopt.data_structures.diagram import Diagram
@@ -11,7 +13,7 @@ class Rewriter:
     def __init__(self, diagram: Diagram):
         self.diagram = diagram
 
-    def rewrite(self, rule: RewriteRule, source_to_diagram_map: dict[Vertex, Vertex], source_spider_to_connected_diagram_neighbors_map: dict[Vertex, list[ConnectingNeighbor]]):
+    def rewrite(self, rule: RewriteRule, source_to_diagram_map: Dict[Vertex, Vertex], source_spider_to_connected_diagram_neighbors_map: Dict[Vertex, List[ConnectingNeighbor]]):
         source = rule.source
         target = rule.target
 
@@ -27,7 +29,7 @@ class Rewriter:
 
 
         # Add new nodes based on target structure
-        target_to_diagram_map: dict[Vertex, Vertex] = {}
+        target_to_diagram_map: Dict[Vertex, Vertex] = {}
         for target_spider in target.g.vertices():
             # calculate qubit index of new spider based on origin connecting wires source spider
             qubit_index = self.get_qubit_index_for_rewritten_spider(target_spider, rule, source_to_diagram_map)
@@ -75,7 +77,7 @@ class Rewriter:
         self.diagram.remove_spiders(diagram_source_rule_spiders) # also removes inner as well as connecting, outer wires
 
 
-    def get_qubit_index_for_rewritten_spider(self, target_spider: Vertex, rule: RewriteRule, source_to_diagram_map: dict[Vertex, Vertex]) -> int:
+    def get_qubit_index_for_rewritten_spider(self, target_spider: Vertex, rule: RewriteRule, source_to_diagram_map: Dict[Vertex, Vertex]) -> int:
         source_spiders = [s for s in rule.connecting_wires_spider_mapping if rule.connecting_wires_spider_mapping[s] == target_spider]
 
         return self.diagram.get_spider_qubit_index(source_to_diagram_map[source_spiders[0]])

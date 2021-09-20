@@ -1,4 +1,4 @@
-from typing import cast
+from typing import cast, Set, List
 
 from zxopt.data_structures.circuit.circuit_component import CircuitComponent
 from zxopt.data_structures.circuit.register.classical_register import ClassicalRegister
@@ -9,9 +9,9 @@ from zxopt.util.toolbox import flat_map
 
 class Circuit:
     def __init__(self):
-        self.components: set[CircuitComponent] = set()
-        self.quantum_registers: list[QuantumRegister] = []
-        self.classical_registers: list[ClassicalRegister] = []
+        self.components: Set[CircuitComponent] = set()
+        self.quantum_registers: List[QuantumRegister] = []
+        self.classical_registers: List[ClassicalRegister] = []
 
     def add_component(self, component: CircuitComponent):
         component.set_circuit(self)
@@ -28,7 +28,7 @@ class Circuit:
     """
     Returns all components that affect any of the specified bits
     """
-    def get_components_affecting_bits(self, bits: set[RegisterBit]):
+    def get_components_affecting_bits(self, bits: Set[RegisterBit]):
         return set(filter(lambda c: any([bit in c.affected_bits for bit in bits]), self.components))
 
     def add_register(self, register: Register):
@@ -49,16 +49,16 @@ class Circuit:
             raise NotImplementedError("Unsupported register type")
         register.circuit = self
 
-    def get_registers(self) -> list[Register]:
-        return cast(list[Register], self.quantum_registers) + cast(list[Register], self.classical_registers)
+    def get_registers(self) -> List[Register]:
+        return cast(List[Register], self.quantum_registers) + cast(List[Register], self.classical_registers)
 
-    def get_register_bits(self) -> list[RegisterBit]:
+    def get_register_bits(self) -> List[RegisterBit]:
         return self.get_quantum_bits() + self.get_classical_bits()
 
-    def get_quantum_bits(self) -> list[RegisterBit]:
+    def get_quantum_bits(self) -> List[RegisterBit]:
         return flat_map(lambda reg: reg.bits, self.quantum_registers)
 
-    def get_classical_bits(self) -> list[RegisterBit]:
+    def get_classical_bits(self) -> List[RegisterBit]:
         return flat_map(lambda reg: reg.bits, self.classical_registers)
 
     def get_register_from_bit(self, bit: RegisterBit) -> Register:
@@ -67,6 +67,6 @@ class Circuit:
     def step_count(self) -> int:
         return max([c.step for c in self.components]) + 1
 
-    def get_components_by_step(self, step: int) -> list[CircuitComponent]:
+    def get_components_by_step(self, step: int) -> List[CircuitComponent]:
         return list(filter(lambda c: c.step == step, self.components))
 

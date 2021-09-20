@@ -1,10 +1,10 @@
 from io import BytesIO
-from typing import TypeVar, Callable
+from typing import TypeVar, Callable, List, Optional
 
 import numpy as np
 from IPython.display import display, SVG
 
-cached_is_interactive: bool = None
+cached_is_interactive: Optional[bool] = None
 def is_interactive():
     global cached_is_interactive
     if cached_is_interactive is not None:
@@ -31,10 +31,10 @@ def round_complex(c: complex, digits: int = 8):
 T = TypeVar("T")
 S = TypeVar("S")
 
-def flat_map(f: Callable[[T], list[S]], l: list[T]) -> list[S]:
+def flat_map(f: Callable[[T], List[S]], l: List[T]) -> List[S]:
     return [e for o in l for e in f(o)]
 
-def flatten(l: list[list[T]]) -> list[T]:
+def flatten(l: List[List[T]]) -> List[T]:
     return flat_map(lambda x: x, l)
 
 def matrix_equality(m1: np.ndarray, m2: np.ndarray, epsilon: float = 0.00001) -> bool:

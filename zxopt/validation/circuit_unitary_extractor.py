@@ -26,7 +26,7 @@ class CircuitUnitaryExtractor(Loggable):
         transformation = np.identity(2 ** self.qubit_count)
 
         for step in range(circuit.step_count()):
-            gates: list[GateComponent] = [c for c in circuit.get_components_by_step(step) if isinstance(c, GateComponent)]
+            gates: List[GateComponent] = [c for c in circuit.get_components_by_step(step) if isinstance(c, GateComponent)]
             controlled_gates = [g for g in gates if len(g.control_bits) > 0]
             non_controlled_gates = [g for g in gates if len(g.control_bits) == 0]
 

@@ -14,11 +14,11 @@ from zxopt.util import Loggable
 class CircuitTranslator(Loggable):
     circuit: Circuit
     diagram: Diagram
-    input_boundaries_by_qubit: dict[QuantumBit, Vertex]
-    output_boundaries_by_qubit: dict[QuantumBit, Vertex]
-    current_frontier_by_qubit: dict[QuantumBit, Vertex] # graph nodes for the current frontier per qubit (what node each operation per qubit would connect to)
-    hadamard_status_by_qubit: dict[QuantumBit, bool]
-    qubit_indicies: dict[QuantumBit, int]
+    input_boundaries_by_qubit: Dict[QuantumBit, Vertex]
+    output_boundaries_by_qubit: Dict[QuantumBit, Vertex]
+    current_frontier_by_qubit: Dict[QuantumBit, Vertex] # graph nodes for the current frontier per qubit (what node each operation per qubit would connect to)
+    hadamard_status_by_qubit: Dict[QuantumBit, bool]
+    qubit_indicies: Dict[QuantumBit, int]
 
     def __init__(self, circuit: Circuit):
         super().__init__()
@@ -33,7 +33,7 @@ class CircuitTranslator(Loggable):
     # translation based on universal CNOT, Z(alpha), H
     # X(alpha) = HZ(alpha)H can be represented as a spider as well
     def translate(self) -> Diagram:
-        qubits = cast(list[QuantumBit], self.circuit.get_quantum_bits())
+        qubits = cast(List[QuantumBit], self.circuit.get_quantum_bits())
 
         # Parse registers
         self.input_boundaries_by_qubit = {qubit: self.diagram.add_boundary(INPUT, self.qubit_indicies[qubit]) for qubit in qubits}

@@ -3,3 +3,4 @@ matplotlib
 pgi
 antlr4-python3-runtime
 tensornetwork
+ipython

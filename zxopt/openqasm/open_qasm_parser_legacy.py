@@ -32,7 +32,7 @@ class OpenQASMParserLegacy(Loggable):
         statements = self.__get_statements(input)
         self.__parse_statements(statements)
 
-    def __parse_statements(self, statements: list[str]):
+    def __parse_statements(self, statements: List[str]):
         for statement in statements:
             self.__parse_statement(statement)
 
@@ -79,7 +79,7 @@ class OpenQASMParserLegacy(Loggable):
     """
     Returns the statements contained in the input(separated by semicolons) as a list, removes empty statements, removes comments
     """
-    def __get_statements(self, input: str) -> list[str]:
+    def __get_statements(self, input: str) -> List[str]:
         input_no_comments = self.__eliminate_comments(input)
 
         statements = []

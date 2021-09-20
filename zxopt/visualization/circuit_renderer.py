@@ -1,4 +1,5 @@
 import math
+from typing import Dict, List
 
 import cairo
 
@@ -25,7 +26,7 @@ MEASUREMENT_COLOR = "#acacac"
 
 class CircuitRenderer(Renderer):
     circuit: Circuit
-    register_bit_positions: dict[RegisterBit, int]
+    register_bit_positions: Dict[RegisterBit, int]
     circuit_width: int
 
     def __init__(self, circuit: Circuit):
@@ -63,7 +64,7 @@ class CircuitRenderer(Renderer):
             else:
                 raise RuntimeError("Cannot render unknow circuit component type", type(component))
 
-    def render_gate(self, ctx: cairo.Context, step: int, qubit_position: int, control_positions: list[int], representation: str):
+    def render_gate(self, ctx: cairo.Context, step: int, qubit_position: int, control_positions: List[int], representation: str):
         gate_pos = (step * STEP_SPACING, qubit_position * BIT_SPACING)
 
         color(ctx, BLACK)

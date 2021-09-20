@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Set
 
 from graph_tool import Graph, VertexPropertyMap, EdgePropertyMap, Vertex, Edge
 
@@ -19,16 +19,16 @@ Represents a rewrite rule specifying the source and target graphs as well as the
 class RewriteRule:
     source: "RewriteStructure"
     target: "RewriteStructure"
-    variable_mapping: dict[RewriteVariable, RewriteVariable]
-    connecting_wires_spider_mapping: dict[Vertex, Optional[Vertex]]  # a mapping from spiders of the source to the target used for transferring external, connecting wires
+    variable_mapping: Dict[RewriteVariable, RewriteVariable]
+    connecting_wires_spider_mapping: Dict[Vertex, Optional[Vertex]]  # a mapping from spiders of the source to the target used for transferring external, connecting wires
 
     inverse_rule: "RewriteRule" # this rule's inverse, generated on demand, recursive reference
 
     def __init__(self,
                  s1: "RewriteStructure" = None, # welcome to python, only evaluated once
                  s2: "RewriteStructure" = None,
-                 variable_mapping: dict[RewriteVariable, RewriteVariable] = None,
-                 connecting_wires_spider_mapping: dict[Vertex, Vertex] = None):
+                 variable_mapping: Dict[RewriteVariable, RewriteVariable] = None,
+                 connecting_wires_spider_mapping: Dict[Vertex, Vertex] = None):
         self.source = s1 if s1 is not None else RewriteStructure()
         self.target = s2 if s2 is not None else RewriteStructure()
         self.variable_mapping = variable_mapping if variable_mapping is not None else {}
@@ -70,9 +70,9 @@ class RewriteStructure:
     spider_color_prop: VertexPropertyMap  # green, red, white, black
     spider_phase_prop: VertexPropertyMap  # phase expressions
     hadamard_prop: EdgePropertyMap
-    variables: set[RewriteVariable]
+    variables: Set[RewriteVariable]
 
-    assigned_spider_colors: dict[str, Optional[str]]
+    assigned_spider_colors: Dict[str, Optional[str]]
 
     def __init__(self):
         self.g = Graph(directed=False)

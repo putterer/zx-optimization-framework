@@ -109,8 +109,8 @@ class DiagramRenderer(Renderer):
 
         # Alignment algorithm see notes
         # BFS
-        processed: set[Vertex] = set()
-        to_process: set[Vertex] = set()
+        processed: Set[Vertex] = set()
+        to_process: Set[Vertex] = set()
 
         for input in inputs:
             pos[input] = [diagram.get_boundary_index(input), SPACING * diagram.get_boundary_index(input)]

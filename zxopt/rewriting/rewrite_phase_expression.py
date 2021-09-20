@@ -4,7 +4,7 @@
 An expression in the phase of a spider of a rewrite structure
 """
 import abc
-from typing import Callable
+from typing import Callable, Set
 
 
 class RewritePhaseExpression:
@@ -40,7 +40,7 @@ class RewritePhaseExpression:
     Return all variables in this expression
     """
     @abc.abstractmethod
-    def variables(self) -> set["RewriteVariable"]:
+    def variables(self) -> Set["RewriteVariable"]:
         raise NotImplementedError()
 
 
@@ -81,7 +81,7 @@ class RewriteVariable(RewritePhaseExpression):
         self.resolved = False
         self.value = 0.0
 
-    def variables(self) -> set["RewriteVariable"]:
+    def variables(self) -> Set["RewriteVariable"]:
         return {self}
 
 
@@ -101,7 +101,7 @@ class ConstantExpression(RewritePhaseExpression):
     def is_resolved(self) -> bool:
         return True
 
-    def variables(self) -> set[RewriteVariable]:
+    def variables(self) -> Set[RewriteVariable]:
         return set()
 
 class BinaryOperationExpression(RewritePhaseExpression):
@@ -128,5 +128,5 @@ class BinaryOperationExpression(RewritePhaseExpression):
         self.left_expr.reset()
         self.right_expr.reset()
 
-    def variables(self) -> set[RewriteVariable]:
+    def variables(self) -> Set[RewriteVariable]:
         return self.left_expr.variables().union(self.right_expr.variables())

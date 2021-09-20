@@ -1,11 +1,11 @@
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, List
 
 if TYPE_CHECKING:
     from zxopt.data_structures.circuit.circuit import Circuit
 
 class Register:
     circuit: "Circuit"
-    bits: list["RegisterBit"]
+    bits: List["RegisterBit"]
     name: Optional[str]
 
     def __init__(self, name: Optional[str] = None):

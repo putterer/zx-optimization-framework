@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from graph_tool import Graph, VertexPropertyMap, Vertex, Edge, EdgePropertyMap
 
@@ -67,7 +67,7 @@ class Diagram:
 
         return v
 
-    def remove_spiders(self, vertices: list[Vertex]):
+    def remove_spiders(self, vertices: List[Vertex]):
         self.g.remove_vertex(vertices)
 
     """
@@ -116,14 +116,14 @@ class Diagram:
     def is_spider(self, v: Vertex) -> bool:
         return self.vertex_type_prop[v] == VERTEX_SPIDER_GREEN or self.vertex_type_prop[v] == VERTEX_SPIDER_RED
 
-    def get_spiders(self) -> list[Vertex]:
+    def get_spiders(self) -> List[Vertex]:
         return [v for v in self.g.vertices() if self.is_spider(v)]
 
-    def get_spiders_by_color(self, color: str) -> list[Vertex]:
+    def get_spiders_by_color(self, color: str) -> List[Vertex]:
         assert color in SPIDER_COLORS
         return [s for s in self.get_spiders() if self.get_spider_color(s) == color]
 
-    def is_boundary(self, v: Vertex) -> list[Vertex]:
+    def is_boundary(self, v: Vertex) -> List[Vertex]:
         return self.vertex_type_prop[v] == VERTEX_BOUNDARY
     def is_input(self, v: Vertex):
         return self.is_boundary(v) and self.boundary_type_prop[v] == INPUT
@@ -133,10 +133,10 @@ class Diagram:
     def get_boundaries(self):
         return [v for v in self.g.vertices() if self.is_boundary(v)]
 
-    def get_inputs(self) -> list[Vertex]:
+    def get_inputs(self) -> List[Vertex]:
         return [v for v in self.g.vertices() if self.is_input(v)]
 
-    def get_outputs(self) -> list[Vertex]:
+    def get_outputs(self) -> List[Vertex]:
         return [v for v in self.g.vertices() if self.is_output(v)]
 
     def get_boundary_index(self, b: Vertex) -> int:

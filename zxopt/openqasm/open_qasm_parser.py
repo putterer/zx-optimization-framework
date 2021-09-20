@@ -32,9 +32,9 @@ class OpenQasmParser(Loggable, OpenQASMListener):
     circuit: Circuit
     version: str
     working_directory: str
-    includes: list[str]
-    registers: dict[str, Register]
-    gate_declarations: dict[str, "GateDeclaration"]
+    includes: List[str]
+    registers: Dict[str, Register]
+    gate_declarations: Dict[str, "GateDeclaration"]
 
     def __init__(self):
         super().__init__()
@@ -133,7 +133,7 @@ class OpenQasmParser(Loggable, OpenQASMListener):
 
         self.apply_uop(ctx, {}, {})
 
-    def apply_uop(self, ctx:OpenQASMParser.UopContext, bound_qubit_names: dict[str, QuantumBit], bound_names: dict[str, float]):
+    def apply_uop(self, ctx:OpenQASMParser.UopContext, bound_qubit_names: Dict[str, QuantumBit], bound_names: Dict[str, float]):
         gate_name = ctx.children[0].getText() # 'U', 'CX' or ID for custom gate
         params = ctx.explist().exp() if ctx.explist() else []
         qarg_contexts = []
@@ -174,12 +174,12 @@ class OpenQasmParser(Loggable, OpenQASMListener):
     Applies the gate with the given name, recursively if necessary
     name:
         the name of the gate
-    params: list[OpenQASMParser.ExpContext]
+    params: List[OpenQASMParser.ExpContext]
         the list of parameters (as contexts, not evaluated)
-    qargs: list[QuantumBit]
+    qargs: List[QuantumBit]
         the qubits to apply the gate to
     """
-    def apply_gate(self, name: str, params: list[OpenQASMParser.ExpContext], qargs: list[QuantumBit], bound_names: dict[str, float]):
+    def apply_gate(self, name: str, params: List[OpenQASMParser.ExpContext], qargs: List[QuantumBit], bound_names: Dict[str, float]):
         evaluator = ExpressionEvaluator(bound_names)
         evaluated_params = [evaluator.evaluate(ctx) for ctx in params]
 
@@ -194,7 +194,7 @@ class OpenQasmParser(Loggable, OpenQASMListener):
 
 
 
-    def apply_gate_builtin(self, name: str, params: list[float], qargs: list[QuantumBit]):
+    def apply_gate_builtin(self, name: str, params: List[float], qargs: List[QuantumBit]):
         gate = None
         if name == "U":
             if len(qargs) != 1:
@@ -220,15 +220,15 @@ class OpenQasmParser(Loggable, OpenQASMListener):
     """
     Applies a gate declaration recursively at the current location given a list of parameters
     """
-    def apply_gate_declaration(self, gate: "GateDeclaration", params: list[float], qargs: list[QuantumBit]):
+    def apply_gate_declaration(self, gate: "GateDeclaration", params: List[float], qargs: List[QuantumBit]):
         if len(params) != len(gate.param_names) or len(qargs) != len(gate.qarg_names):
             raise RuntimeError(f"Param and qarg length of gate call no not match gate declaration\n"
                                f"params:  given: {len(params)}, required: {len(gate.param_names)}\n"
                                f"qargs:   given: {len(qargs)}, required: {len(gate.qarg_names)}\n")
 
         # bind specified params and args to their name in the gate declaration
-        named_params: dict[str, float] = {}
-        named_qargs: dict[str, QuantumBit] = {}
+        named_params: Dict[str, float] = {}
+        named_qargs: Dict[str, QuantumBit] = {}
         for i in range(len(params)):
             named_params[gate.param_names[i]] = params[i]
         for i in range(len(qargs)):
@@ -249,7 +249,7 @@ class OpenQasmParser(Loggable, OpenQASMListener):
     """
     Returns all registers bits specified by the given argument, may be multiple in case the bit in the register is not specified
     """
-    def __get_registers_bits(self, ctx: OpenQASMParser.ArgumentContext) -> list[RegisterBit]:
+    def __get_registers_bits(self, ctx: OpenQASMParser.ArgumentContext) -> List[RegisterBit]:
         register_name = ctx.ID().getText()
         register = self.registers[register_name]
         if not register:
@@ -314,7 +314,7 @@ class OpenQasmParser(Loggable, OpenQASMListener):
     Can be recursively applied to a circuit
 """
 class GateDeclaration:
-    def __init__(self, name: str, param_names: list[str], qarg_names: list[str], goplist_ctx: OpenQASMParser.GoplistContext):
+    def __init__(self, name: str, param_names: List[str], qarg_names: List[str], goplist_ctx: OpenQASMParser.GoplistContext):
         super().__init__()
         self.name = name
         self.param_names = param_names
@@ -323,8 +323,8 @@ class GateDeclaration:
 
 
 class ExpressionEvaluator:
-    def __init__(self, bound_names: dict[str, float]):
-        self.bound_names: dict[str, float] = bound_names # the variables with given names (parameters)
+    def __init__(self, bound_names: Dict[str, float]):
+        self.bound_names: Dict[str, float] = bound_names # the variables with given names (parameters)
 
     def evaluate(self, ctx: OpenQASMParser.ExpContext):
         if ctx.REAL():

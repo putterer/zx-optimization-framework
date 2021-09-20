@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Set
 
 from zxopt.data_structures.circuit.register.register import RegisterBit
 
@@ -8,9 +8,9 @@ if TYPE_CHECKING:
 class CircuitComponent:
     circuit: "Circuit"
     step: int
-    affected_bits: set[RegisterBit]
+    affected_bits: Set[RegisterBit]
 
-    def __init__(self, affected_bits: set[RegisterBit] = frozenset()):
+    def __init__(self, affected_bits: Set[RegisterBit] = frozenset()):
         self.circuit = None
         self.step = -1
         self.affected_bits = affected_bits  # the (qu)bits this component is connected to

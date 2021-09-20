@@ -25,7 +25,7 @@ class DiagramLinearExtractor(Loggable):
 
         # replace hadamard wires by nodes
         graph = diagram.g
-        hadamard_wires: list[Edge] = [w for w in graph.edges() if diagram.is_wire_hadamard(w)]
+        hadamard_wires: List[Edge] = [w for w in graph.edges() if diagram.is_wire_hadamard(w)]
         hadamard_nodes = []
         for wire in hadamard_wires:
             node = graph.add_vertex(1)
