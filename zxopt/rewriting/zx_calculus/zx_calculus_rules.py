@@ -2,7 +2,7 @@ from typing import Callable
 
 from zxopt.rewriting import RewriteRule, RewriteVariable
 from zxopt.rewriting.rewrite_phase_expression import BinaryOperationExpression, ConstantExpression
-from zxopt.rewriting.rewrite_rule import SPIDER_COLOR_WHITE, CONNECTING_WIRES_ANY
+from zxopt.rewriting.rewrite_rule import SPIDER_COLOR_WHITE, CONNECTING_WIRES_ANY, SPIDER_COLOR_BLACK
 
 OP_ADDITION: Callable = lambda a, b: a + b
 
@@ -36,6 +36,28 @@ class ZXRuleSpider2(RewriteRule):
         s_source = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0.0), 2, 0) # hadamard count not matched, none flipped!
 
         self.connecting_wires_spider_mapping[s_source] = None
+
+    def inverse(self):
+        raise NotImplementedError() # TODO
+
+
+class ZXRuleBialgebraLaw(RewriteRule):
+    def __init__(self):
+        super().__init__()
+
+        s11_source = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0.0), 1, 0)
+        s12_source = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0.0), 1, 0)
+        s21_source = self.source.add_spider(SPIDER_COLOR_BLACK, ConstantExpression(0.0), 1, 0)
+        s22_source = self.source.add_spider(SPIDER_COLOR_BLACK, ConstantExpression(0.0), 1, 0)
+        w1_source = self.source.add_wire(s11_source, s21_source, is_hadamard=False)
+        w2_source = self.source.add_wire(s11_source, s22_source, is_hadamard=False)
+        w3_source = self.source.add_wire(s11_source, s21_source, is_hadamard=False)
+        w4_source = self.source.add_wire(s11_source, s22_source, is_hadamard=False)
+
+        s1_target = self.source.add_spider()
+
+        self.connecting_wires_spider_mapping[s11_source] = s_target
+        self.connecting_wires_spider_mapping[s2_source] = s_target
 
     def inverse(self):
         raise NotImplementedError() # TODO

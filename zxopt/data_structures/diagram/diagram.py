@@ -146,7 +146,7 @@ class Diagram:
         return self.spider_qubit_indices_prop[s]
 
     def is_wire_hadamard(self, e: Edge) -> bool:
-        return self.hadamard_prop[e]
+        return self.hadamard_prop[e] == 1
 
     def set_wire_hadamard(self, e: Edge, is_h: bool):
         self.hadamard_prop[e] = is_h

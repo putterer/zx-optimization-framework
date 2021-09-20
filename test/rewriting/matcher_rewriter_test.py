@@ -2,7 +2,7 @@ import unittest
 from math import pi
 from typing import Tuple
 
-from graph_tool import Vertex
+from graph_tool import Vertex, Edge
 
 from zxopt.data_structures.diagram import Diagram
 from zxopt.rewriting import RewriteRule
@@ -17,6 +17,7 @@ class MatcherRewriterTest(unittest.TestCase):
 
     def assert_wire(self, s1: Vertex, s2: Vertex):
         self.assertEqual(1, len(list(filter(lambda x: x == s2, s1.all_neighbors()))))
+        return [w for w in s1.all_edges() if w.source() == s2 or w.target() == s2][0]
 
     def test_spider_rule_1_match(self):
         diagram = generate_three_spider_diagram((1.0 * pi, "green"), (0.5 * pi, "red"), (0.25 * pi, "red"))
@@ -65,35 +66,43 @@ class MatcherRewriterTest(unittest.TestCase):
         self.assertFalse(rule_matches(diagram, ZXRuleSpider2()))
 
     def test_spider_rule_2_rewrite(self):
-        diagram = generate_three_spider_diagram((1.0 * pi, "green"), (0.0 * pi, "red"), (1.0 * pi, "green"))
+        diagram = generate_three_spider_diagram((1.0 * pi, "green"), (0.0 * pi, "red"), (0.7 * pi, "red"), hadamard=(True, True, False, False))
         rewrite(diagram, ZXRuleSpider2())
         b_in, b_out, s1, s2, s3 = get_three_spider_diagram_vertices(diagram)
 
-
         self.assertTrue(s2 is None)
         self.assertEqual(2, len(diagram.get_spiders()))
-        self.assert_wire(s1, s3)
+        self.assertEqual(1.0 * pi, diagram.get_spider_phase(s1))
+        self.assertEqual(0.7 * pi, diagram.get_spider_phase(s3))
+        self.assertEqual("green", diagram.get_spider_color(s1))
+        self.assertEqual("red", diagram.get_spider_color(s3))
 
-        show(diagram)
+        w13 = self.assert_wire(s1, s3)
+        w01 = self.assert_wire(b_in, s1)
+        w34 = self.assert_wire(s3, b_out)
+        self.assertTrue(diagram.is_wire_hadamard(w13))
+        self.assertTrue(diagram.is_wire_hadamard(w01))
+        self.assertFalse(diagram.is_wire_hadamard(w34))
+        # show(diagram)
+
+    def test_bialgebra_law_matches(self):
+        pass #TODO
 
 
-        # TODO: hadamards
-
-
-def generate_three_spider_diagram(p1: Tuple[float, str], p2: Tuple[float, str], p3: Tuple[float, str], star_topology: bool = False) -> Diagram:
+def generate_three_spider_diagram(p1: Tuple[float, str], p2: Tuple[float, str], p3: Tuple[float, str], star_topology: bool = False, hadamard: Tuple[bool, bool, bool, bool] = (False, False, False, False)) -> Diagram:
     diagram = Diagram()
     b_in = diagram.add_boundary("in", 0, "b_in")
     b_out = diagram.add_boundary("out", 0, "b_out")
     s1 = diagram.add_spider(p1[0], p1[1], 0, "s1")
     s2 = diagram.add_spider(p2[0], p2[1], 0, "s2")
     s3 = diagram.add_spider(p3[0], p3[1], 0, "s3")
-    diagram.add_wire(b_in, s1)
-    diagram.add_wire(s1, s2)
-    diagram.add_wire(s2, s3)
+    w1 = diagram.add_wire(b_in, s1, hadamard[0])
+    w2 = diagram.add_wire(s1, s2, hadamard[1])
+    w3 = diagram.add_wire(s2, s3, hadamard[2])
     if not star_topology:
-        diagram.add_wire(s3, b_out)
+        w4 = diagram.add_wire(s3, b_out, hadamard[3])
     else:
-        diagram.add_wire(s2, b_out)
+        w4 = diagram.add_wire(s2, b_out, hadamard[3])
     return diagram
 
 def get_three_spider_diagram_vertices(diagram: Diagram) -> Tuple[Vertex, Vertex, Vertex, Vertex, Vertex]:
