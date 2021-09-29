@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Set
+from typing import Optional, Dict, Set, List, Union
 
 from graph_tool import Graph, VertexPropertyMap, EdgePropertyMap, Vertex, Edge
 
@@ -21,9 +21,9 @@ class RewriteRule:
     source: "RewriteStructure"
     target: "RewriteStructure"
     variable_mapping: Dict[RewriteVariable, RewriteVariable]
-    connecting_wires_spider_mapping: Dict[Vertex, Optional[Vertex]]  # a mapping from spiders of the source to the target used for transferring external, connecting wires
+    connecting_wires_spider_mapping: Dict[Vertex, Union[Vertex, List[Vertex], None]]  # a mapping from spiders of the source to the target used for transferring external, connecting wires
 
-    inverse_rule: "RewriteRule" # this rule's inverse, generated on demand, recursive reference
+    inverse_rule: Optional["RewriteRule"] # this rule's inverse, generated on demand, recursive reference
 
     def __init__(self,
                  s1: "RewriteStructure" = None, # welcome to python, only evaluated once
@@ -34,6 +34,8 @@ class RewriteRule:
         self.target = s2 if s2 is not None else RewriteStructure()
         self.variable_mapping = variable_mapping if variable_mapping is not None else {}
         self.connecting_wires_spider_mapping = connecting_wires_spider_mapping if connecting_wires_spider_mapping is not None else {}
+
+        self.inverse_rule = None
 
     """
     Reset all phase expression variables
@@ -51,11 +53,24 @@ class RewriteRule:
         return self.inverse_rule
 
     def __generate_inverse(self):
+        # inversed_connecting_wires_mapping = {self.connecting_wires_spider_mapping[s]: s for s in self.connecting_wires_spider_mapping}
+        inversed_connecting_wires_mapping = {}
+
+        for target_vertex in self.target.g.vertices():
+            spiders_pointing_to_vertex = [s for s in self.connecting_wires_spider_mapping if self.connecting_wires_spider_mapping[s] == target_vertex]
+            if len(spiders_pointing_to_vertex) == 0:
+                inversed_connecting_wires_mapping[target_vertex] = None
+            elif len(spiders_pointing_to_vertex) == 1:
+                inversed_connecting_wires_mapping[target_vertex] = spiders_pointing_to_vertex[0]
+            else:
+                inversed_connecting_wires_mapping[target_vertex] = spiders_pointing_to_vertex
+
+
         self.inverse_rule = RewriteRule(
             self.target,
             self.source,
             {self.variable_mapping[s]: s for s in self.variable_mapping},
-            {self.connecting_wires_spider_mapping[s]: s for s in self.connecting_wires_spider_mapping}
+            inversed_connecting_wires_mapping
         )
 
 

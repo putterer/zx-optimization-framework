@@ -107,12 +107,18 @@ class MatcherRewriterTest(unittest.TestCase):
 
         pass
 
-    def test_bialgebra_law_rewrite(self):
+    def test_bialgebra_law_rewrite_inverse_rewrite(self):
         diagram = generate_bialegbra_law_diagram((0.0, "green"), (0.0, "green"), (0.0, "red"), (0.0, "red"))
         diagram.set_wire_hadamard(next(diagram.get_vertex_from_identifier("b_in1").all_edges()), True)
 
         show(diagram)
         rewrite(diagram, ZXRuleBialgebraLaw())
+        show(diagram)
+
+        self.assertFalse(rule_matches(diagram, ZXRuleBialgebraLaw()))
+
+        self.assertTrue(rule_matches(diagram, ZXRuleBialgebraLaw().inverse()))
+        rewrite(diagram, ZXRuleBialgebraLaw().inverse())
         show(diagram)
 
 
@@ -150,6 +156,18 @@ class MatcherRewriterTest(unittest.TestCase):
         show(diagram)
         rewrite(diagram, ZXRuleColor())
         show(diagram)
+
+
+    def test_bialgebra_rule_inverse(self):
+        rule = ZXRuleBialgebraLaw()
+        inverse = rule.inverse()
+
+        self.assertEqual(2, len(inverse.connecting_wires_spider_mapping))
+        self.assertEqual(2, len(inverse.connecting_wires_spider_mapping[0]))
+        self.assertEqual(2, len(inverse.connecting_wires_spider_mapping[1]))
+        self.assertEqual(rule.source, inverse.target)
+        self.assertEqual(rule.target, inverse.source)
+
 
 def generate_three_spider_diagram(p1: Tuple[float, str], p2: Tuple[float, str], p3: Tuple[float, str], star_topology: bool = False, hadamard: Tuple[bool, bool, bool, bool] = (False, False, False, False)) -> Diagram:
     diagram = Diagram()
