@@ -107,6 +107,21 @@ class ZXRuleColor(RewriteRule):
     def inverse(self):
         return self
 
+class ZXRuleCopying(RewriteRule):
+    def __init__(self):
+        super().__init__()
+
+        s1_source = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0.0), 0, 0)
+        s2_source = self.source.add_spider(SPIDER_COLOR_BLACK, ConstantExpression(0.0), 2, 0)
+        w1_source = self.source.add_wire(s1_source, s2_source, False)
+
+        s1_target = self.target.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0.0), 1, 0)
+        s2_target = self.target.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0.0), 1, 0)
+
+        self.connecting_wires_spider_mapping[s1_source] = None
+        self.connecting_wires_spider_mapping[s2_source] = [s1_target, s2_target]
+
+
 class ZXRule(RewriteRule):
     def __init__(self):
         super().__init__()

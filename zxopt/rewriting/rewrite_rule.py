@@ -57,7 +57,7 @@ class RewriteRule:
         inversed_connecting_wires_mapping = {}
 
         for target_vertex in self.target.g.vertices():
-            spiders_pointing_to_vertex = [s for s in self.connecting_wires_spider_mapping if self.connecting_wires_spider_mapping[s] == target_vertex]
+            spiders_pointing_to_vertex = [s for s in self.connecting_wires_spider_mapping if self.connecting_wires_spider_mapping[s] == target_vertex or (type(self.connecting_wires_spider_mapping[s]) == list and target_vertex in self.connecting_wires_spider_mapping[s])]
             if len(spiders_pointing_to_vertex) == 0:
                 inversed_connecting_wires_mapping[target_vertex] = None
             elif len(spiders_pointing_to_vertex) == 1:

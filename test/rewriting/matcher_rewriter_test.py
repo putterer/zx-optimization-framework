@@ -8,7 +8,8 @@ from zxopt.data_structures.diagram import Diagram
 from zxopt.rewriting import RewriteRule
 from zxopt.rewriting.matcher import Matcher
 from zxopt.rewriting.zx_calculus import ZXRuleSpider1, ZXRuleSpider2
-from zxopt.rewriting.zx_calculus.zx_calculus_rules import ZXRuleBialgebraLaw, ZXRulePiCommutation, ZXRuleColor
+from zxopt.rewriting.zx_calculus.zx_calculus_rules import ZXRuleBialgebraLaw, ZXRulePiCommutation, ZXRuleColor, \
+    ZXRuleCopying
 from zxopt.visualization import DiagramRenderer, Window
 
 SHOW_REWRITES = True
@@ -168,6 +169,31 @@ class MatcherRewriterTest(unittest.TestCase):
         self.assertEqual(rule.source, inverse.target)
         self.assertEqual(rule.target, inverse.source)
 
+        # rewrite is part of the normal rewrite test
+
+    def test_copying_rule_matches(self):
+        diagram = generate_copying_diagram((0.0 * pi, "green"), (0.0 * pi, "red"), hadamard=(False, False, False))
+        self.assertTrue(rule_matches(diagram, ZXRuleCopying()))
+
+        diagram = generate_copying_diagram((0.0 * pi, "green"), (0.0 * pi, "red"), hadamard=(False, True, False))
+        self.assertTrue(rule_matches(diagram, ZXRuleCopying()))
+
+        diagram = generate_copying_diagram((0.0 * pi, "green"), (0.0 * pi, "red"), hadamard=(True, False, False))
+        self.assertFalse(rule_matches(diagram, ZXRuleCopying()))
+
+        diagram = generate_copying_diagram((0.5 * pi, "green"), (0.0 * pi, "red"), hadamard=(False, False, False))
+        self.assertFalse(rule_matches(diagram, ZXRuleCopying()))
+
+    def test_copying_rule_rewrite_inverse_rewrite(self):
+        diagram = generate_copying_diagram((0.0 * pi, "green"), (0.0 * pi, "red"), hadamard=(False, True, False))
+        show(diagram)
+        rewrite(diagram, ZXRuleCopying())
+        show(diagram)
+
+        self.assertTrue(rule_matches(diagram, ZXRuleCopying().inverse()))
+        rewrite(diagram, ZXRuleCopying().inverse())
+        show(diagram)
+
 
 def generate_three_spider_diagram(p1: Tuple[float, str], p2: Tuple[float, str], p3: Tuple[float, str], star_topology: bool = False, hadamard: Tuple[bool, bool, bool, bool] = (False, False, False, False)) -> Diagram:
     diagram = Diagram()
@@ -219,6 +245,19 @@ def generate_bialegbra_law_diagram(p11: Tuple[float, str], p12: Tuple[float, str
 def get_bialgebra_law_diagram_vertices(diagram: Diagram) -> Tuple[Vertex, Vertex, Vertex, Vertex]:
     return diagram.get_vertex_from_identifier("s11"), diagram.get_vertex_from_identifier("s12"), diagram.get_vertex_from_identifier("s21"), diagram.get_vertex_from_identifier("s22")
 
+def generate_copying_diagram(p1: Tuple[float, str], p2: Tuple[float, str], hadamard: Tuple[bool, bool, bool] = (False, False, False)) -> Diagram:
+    diagram = Diagram()
+    b1 = diagram.add_boundary("in", 0, "b1")
+    b2 = diagram.add_boundary("in", 1, "b2")
+
+    s1 = diagram.add_spider(p1[0], p1[1], 0, "s1")
+    s2 = diagram.add_spider(p2[0], p2[1], 0, "s2")
+
+    w1 = diagram.add_wire(s1, s2, hadamard[0])
+    w2 = diagram.add_wire(s2, b1, hadamard[1])
+    w3 = diagram.add_wire(s2, b2, hadamard[2])
+
+    return diagram
 
 def rule_matches(diagram: Diagram, rule: RewriteRule, generate_on_the_fly: bool = GENERATE_ISOMORPHISMS_ON_THE_FLY) -> bool:
     matcher = Matcher(diagram)
