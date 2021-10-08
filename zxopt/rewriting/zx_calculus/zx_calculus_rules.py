@@ -122,8 +122,18 @@ class ZXRuleCopying(RewriteRule):
         self.connecting_wires_spider_mapping[s2_source] = [s1_target, s2_target]
 
 
-class ZXRule(RewriteRule):
+
+class ZXRuleHopfLaw(RewriteRule):
     def __init__(self):
         super().__init__()
 
-        # TODO
+        s1_source = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
+        s2_source = self.source.add_spider(SPIDER_COLOR_BLACK, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
+        w1_source = self.source.add_wire(s1_source, s2_source, False)
+        w2_source = self.source.add_wire(s1_source, s2_source, False)
+
+        s1_target = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
+        s2_target = self.source.add_spider(SPIDER_COLOR_BLACK, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
+
+        self.connecting_wires_spider_mapping[s1_source] = s1_target
+        self.connecting_wires_spider_mapping[s2_source] = s2_target

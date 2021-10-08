@@ -14,6 +14,8 @@ class GraphLikeTransformer:
         self.eliminate_red_spiders(diagram)
         self.eliminate_non_hadamard_wires(diagram)
 
+
+
     """
     Replace all red (X) spiders by green (Z) spiders
     Duplicate hadamards are automatically resolved via the toggeling mechanism of the edges' hadamard status
@@ -34,8 +36,13 @@ class GraphLikeTransformer:
     def eliminate_non_hadamard_wires(self, diagram: Diagram) -> int:
         edges_removed = 0
 
-        non_hadamard_wires = [w for w in diagram.get_non_boundary_wires() if not diagram.is_wire_hadamard(w)] # also have to be non boundary
-        # for edge in non_hadamard_wires:
-        #     # TODO: use rewrite rules
+        while True:
+            non_hadamard_wires = [w for w in diagram.get_non_boundary_wires() if not diagram.is_wire_hadamard(w)] # also have to be non boundary
+            wire = next(non_hadamard_wires)
+            if wire == None:
+                break
+
+            edges_removed += 1
+
 
         return edges_removed

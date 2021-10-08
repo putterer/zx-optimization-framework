@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 import tensornetwork
 from graph_tool import Edge, Vertex
