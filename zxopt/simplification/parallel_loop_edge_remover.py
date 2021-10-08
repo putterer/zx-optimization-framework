@@ -41,6 +41,7 @@ class ParallelLoopEdgeRemover:
 
             if normal_matched is None and hadamard_matched is None:
                 break
+        # TODO: debug -> alternative: hard code solution
 
 
 class ParallelNormalEdgeRule(RewriteRule):
@@ -53,8 +54,8 @@ class ParallelNormalEdgeRule(RewriteRule):
         w1_source = self.source.add_wire(s1_source, s2_source, False)
         w2_source = self.source.add_wire(s1_source, s2_source, False)
 
-        s1_target = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
-        s2_target = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
+        s1_target = self.target.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
+        s2_target = self.target.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
         w1_target = self.target.add_wire(s1_source, s2_source, False)
 
         self.connecting_wires_spider_mapping[s1_source] = s1_target
@@ -73,8 +74,8 @@ class ParallelSingleHadEdgeRule(RewriteRule):
         w1_source = self.source.add_wire(s1_source, s2_source, True)
         w2_source = self.source.add_wire(s1_source, s2_source, False)
 
-        s1_target = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(np.pi), CONNECTING_WIRES_ANY, 0)
-        s2_target = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
+        s1_target = self.target.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(np.pi), CONNECTING_WIRES_ANY, 0)
+        s2_target = self.target.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
         w1_target = self.target.add_wire(s1_source, s2_source, False)
 
         self.connecting_wires_spider_mapping[s1_source] = s1_target
@@ -94,8 +95,8 @@ class ParallelDoubleHadEdgeRule(RewriteRule):
         w1_source = self.source.add_wire(s1_source, s2_source, True)
         w2_source = self.source.add_wire(s1_source, s2_source, True)
 
-        s1_target = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
-        s2_target = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
+        s1_target = self.target.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
+        s2_target = self.target.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
 
         self.connecting_wires_spider_mapping[s1_source] = s1_target
         self.connecting_wires_spider_mapping[s2_source] = s2_target
@@ -111,7 +112,7 @@ class SelfLoopNormalRule(RewriteRule):
         s1_source = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
         w1_source = self.source.add_wire(s1_source, s1_source, False)
 
-        s1_target = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
+        s1_target = self.target.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
 
         self.connecting_wires_spider_mapping[s1_source] = s1_target
 

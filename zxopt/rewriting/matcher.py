@@ -22,7 +22,6 @@ class Matcher:
     Match (and applies if specified) the give rule in one direction if possible
     The rule is reset before and contains the matched phases and colors after matching 
     """
-    # TODO: separate different parts into multiple functions
     def match_rule(self, rule: RewriteRule, apply: bool = False, generate_on_the_fly: bool = True) -> Optional[Dict[Vertex, Vertex]]:
         source = rule.source
 
