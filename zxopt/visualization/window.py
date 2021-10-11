@@ -48,12 +48,25 @@ class Window:
 
         self.window.connect("configure-event", self.on_window_reconfigure)
 
+        self.window.connect("motion_notify_event", self.mouse_moved)
+        self.window.connect("button_press_event", self.mouse_pressed)
+        self.window.connect("button_release_event", self.mouse_released)
+
     def main_loop(self):
         Gtk.main()
 
 
 
     # Signal handlers
+
+    def mouse_moved(self, widget, event):
+        self.renderer.mouse_moved(event.x, event.y)
+
+    def mouse_pressed(self, widget, event):
+        self.renderer.mouse_pressed(event.x, event.y, event.button)
+
+    def mouse_released(self, widget, event):
+        self.renderer.mouse_released(event.x, event.y, event.button)
 
     def on_tool_button_clicked(self, button: Gtk.Button):
         print("hello world ", button.get_label())

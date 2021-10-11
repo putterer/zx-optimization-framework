@@ -2,14 +2,14 @@ import unittest
 from math import pi
 from typing import Tuple
 
-from graph_tool import Vertex, Edge
+from graph_tool import Vertex
 
 from zxopt.data_structures.diagram import Diagram
 from zxopt.rewriting import RewriteRule
 from zxopt.rewriting.matcher import Matcher
 from zxopt.rewriting.zx_calculus import ZXRuleSpider1, ZXRuleSpider2
 from zxopt.rewriting.zx_calculus.zx_calculus_rules import ZXRuleBialgebraLaw, ZXRulePiCommutation, ZXRuleColor, \
-    ZXRuleCopying
+    ZXRuleCopying, ZXRuleHopfLaw
 from zxopt.visualization import DiagramRenderer, Window
 
 SHOW_REWRITES = True
@@ -194,6 +194,29 @@ class MatcherRewriterTest(unittest.TestCase):
         rewrite(diagram, ZXRuleCopying().inverse())
         show(diagram)
 
+    def test_hopf_law_rule_match(self):
+        diagram = generate_hopf_law_diagram((0.0 * pi, "green"), (0.0 * pi, "red"), hadamard=(False, False, False, False))
+        self.assertTrue(rule_matches(diagram, ZXRuleHopfLaw()))
+
+        diagram = generate_hopf_law_diagram((0.0 * pi, "green"), (0.0 * pi, "red"), hadamard=(False, True, False, False))
+        self.assertFalse(rule_matches(diagram, ZXRuleHopfLaw()))
+
+        diagram = generate_hopf_law_diagram((0.0 * pi, "green"), (0.0 * pi, "green"), hadamard=(False, True, False, False))
+        self.assertFalse(rule_matches(diagram, ZXRuleHopfLaw()))
+
+        diagram = generate_hopf_law_diagram((1.0 * pi, "green"), (0.0 * pi, "red"), hadamard=(False, True, False, False))
+        self.assertFalse(rule_matches(diagram, ZXRuleHopfLaw()))
+
+    def test_hopf_law_rule_rewrite_inverse_rewrite(self):
+        diagram = generate_hopf_law_diagram((0.0 * pi, "green"), (0.0 * pi, "red"), hadamard=(True, False, False, False))
+        show(diagram)
+        rewrite(diagram, ZXRuleHopfLaw())
+        show(diagram)
+
+        self.assertTrue(rule_matches(diagram, ZXRuleHopfLaw().inverse()))
+        rewrite(diagram, ZXRuleHopfLaw().inverse())
+        show(diagram)
+
 
 def generate_three_spider_diagram(p1: Tuple[float, str], p2: Tuple[float, str], p3: Tuple[float, str], star_topology: bool = False, hadamard: Tuple[bool, bool, bool, bool] = (False, False, False, False)) -> Diagram:
     diagram = Diagram()
@@ -256,6 +279,19 @@ def generate_copying_diagram(p1: Tuple[float, str], p2: Tuple[float, str], hadam
     w1 = diagram.add_wire(s1, s2, hadamard[0])
     w2 = diagram.add_wire(s2, b1, hadamard[1])
     w3 = diagram.add_wire(s2, b2, hadamard[2])
+
+    return diagram
+
+def generate_hopf_law_diagram(p1: Tuple[float, str], p2: Tuple[float, str], hadamard: Tuple[bool, bool, bool, bool] = (False, False, False, False)) -> Diagram:
+    diagram = Diagram()
+    b_in = diagram.add_boundary("in", 0, "b_in")
+    b_out = diagram.add_boundary("out", 0, "b_out")
+    s1 = diagram.add_spider(p1[0], p1[1], 0, "s1")
+    s2 = diagram.add_spider(p2[0], p2[1], 0, "s2")
+    w1 = diagram.add_wire(b_in, s1, hadamard[0])
+    w2 = diagram.add_wire(s1, s2, hadamard[1])
+    w3 = diagram.add_wire(s1, s2, hadamard[2])
+    w4 = diagram.add_wire(s2, b_out, hadamard[3])
 
     return diagram
 

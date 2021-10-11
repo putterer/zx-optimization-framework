@@ -66,3 +66,13 @@ class Renderer(Loggable):
                 cr.arc(x * 40 + 50, y * 40 + 40, 18, 0, 2*math.pi)
                 cr.fill()
 
+
+
+    def mouse_moved(self, x: int, y: int):
+        pass
+
+    def mouse_pressed(self, x: int, y: int, button: int):
+        pass
+
+    def mouse_released(self, x: int, y: int, button: int):
+        pass

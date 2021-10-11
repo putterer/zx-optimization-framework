@@ -185,3 +185,13 @@ class DiagramRenderer(Renderer):
             current_step += 1
 
         return pos
+
+
+    def mouse_moved(self, x: int, y: int):
+        print(x, " ", y)
+
+    def mouse_pressed(self, x: int, y: int, button: int):
+        print("Pressed: ", x, " ", y)
+
+    def mouse_released(self, x: int, y: int, button: int):
+        print("Released: ", x, " ", y)

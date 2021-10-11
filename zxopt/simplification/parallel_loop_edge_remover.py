@@ -33,14 +33,27 @@ class ParallelLoopEdgeRemover:
     Remove all self loop edges present in the diagram that can be removed using the calculus
     """
     def remove_self_loops(self):
-        matcher = Matcher(self.diagram)
+        # matcher = Matcher(self.diagram)
+        #
+        # while True:
+        #     normal_matched = matcher.match_rule(SelfLoopNormalRule(), apply=True)
+        #     hadamard_matched = matcher.match_rule(SelfLoopHadamardRule(), apply=True)
+        #
+        #     if normal_matched is None and hadamard_matched is None:
+        #         break
 
         while True:
-            normal_matched = matcher.match_rule(SelfLoopNormalRule(), apply=True)
-            hadamard_matched = matcher.match_rule(SelfLoopHadamardRule(), apply=True)
-
-            if normal_matched is None and hadamard_matched is None:
+            self_edges = [e for e in self.diagram.g.edges() if e.source() == e.target() and self.diagram.get_spider_phase(e.source()) == 0.0 and self.diagram.get_spider_color(e.source()) == "green"]
+            if len(self_edges) == 0:
                 break
+
+            w = self_edges[0]
+            if self.diagram.is_wire_hadamard(w):
+                self.diagram.set_spider_phase(w.source(), np.pi)
+            self.diagram.g.remove_edge(w)
+
+
+
         # TODO: debug -> alternative: hard code solution
 
 
@@ -124,10 +137,10 @@ class SelfLoopHadamardRule(RewriteRule):
     def __init__(self):
         super().__init__()
 
-        s1_source = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
+        s1_source = self.source.add_spider("green", ConstantExpression(0), CONNECTING_WIRES_ANY, 0)
         w1_source = self.source.add_wire(s1_source, s1_source, False)
 
-        s1_target = self.source.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(np.pi), CONNECTING_WIRES_ANY, 0)
+        s1_target = self.source.add_spider("green", ConstantExpression(np.pi), CONNECTING_WIRES_ANY, 0)
 
         self.connecting_wires_spider_mapping[s1_source] = s1_target
 

@@ -161,8 +161,10 @@ class Diagram:
         assert color in SPIDER_COLORS
         self.vertex_type_prop[s] = SPIDER_COLOR_TO_VERTEX_TYPE[color]
 
-    def get_spider_phase(self, s: Vertex):
+    def get_spider_phase(self, s: Vertex) -> float:
         return self.phase_prop[s]
+    def set_spider_phase(self, s: Vertex, phase: float):
+        self.phase_prop[s] = phase
 
     def get_non_boundary_wires(self):
         return [e for e in self.g.edges() if not self.is_boundary(e.source) and not self.is_boundary(e.target)]

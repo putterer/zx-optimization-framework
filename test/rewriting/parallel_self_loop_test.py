@@ -61,7 +61,7 @@ class ParallelSelfLoopTest(unittest.TestCase):
         remover.remove_parallel_edges()
 
         show(diagram)
-        # TODO does not work yet
+        # TODO fix rendering
 
     def test_self_loop_removal(self):
         diagram = Diagram()
