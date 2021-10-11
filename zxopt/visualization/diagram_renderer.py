@@ -1,5 +1,5 @@
 import math
-from typing import Set
+from typing import Set, Optional
 
 import gi
 from graph_tool import VertexPropertyMap, Vertex
@@ -26,18 +26,33 @@ HADAMARD_EDGE_COLOR = "#4444DD"
 
 TEMP_SVG_FILENAME = "diagram_render.svg"
 
+DIAGRAM_RENDER_OFFSET = [30, 30]
+DIAGRAM_RENDER_SPACING = 70
+DIAGRAM_INPUT_GRAB_SCALE = 0.80
+
 class DiagramRenderer(Renderer):
     diagram: Diagram
     diagram_width: int
     diagram_height: int
     disable_alignment: bool
 
-    def __init__(self, diagram: Diagram, width: int = 500, height: int = 300, diagram_width=400, diagram_height=250, disable_alignment=False):
+    vertex_pos: Optional[VertexPropertyMap]
+    grabbed_vertex: Optional[Vertex]
+
+    def __init__(self, diagram: Diagram, width: int = 500, height: int = 300, diagram_width=800, diagram_height=600, disable_alignment=False):
         super().__init__(width, height)
         self.diagram = diagram
         self.diagram_width = diagram_width
         self.diagram_height = diagram_height
         self.disable_alignment = disable_alignment
+
+        self.vertex_pos = None
+        self.grabbed_vertex = None
+
+    # def on_resize(self):
+    #     super().on_resize()
+    #     self.diagram_width = self.drawing_area.get_allocated_width()
+    #     self.diagram_height = self.drawing_area.get_allocated_height()
 
     def render(self, ctx: cairo.Context):
         self.render_to_image(TEMP_SVG_FILENAME)
@@ -78,7 +93,10 @@ class DiagramRenderer(Renderer):
 
         # vertex positions
         if not self.disable_alignment:
-            vertex_pos = self.calculate_vertex_positons()
+            if self.vertex_pos is None:
+                self.vertex_pos = self.calculate_vertex_positons()
+
+            vertex_pos = self.vertex_pos
         else:
             vertex_pos = None
 
@@ -94,6 +112,9 @@ class DiagramRenderer(Renderer):
                    fmt = "svg",
                    bg_color = to_cairo_color("#FFFFFF") if is_interactive() else None,
                    inline = False,
+                   fit_view=False,
+                   fit_view_ink=False,
+                   adjust_aspect=False
                    )
 
     def calculate_vertex_positons(self) -> VertexPropertyMap:
@@ -101,12 +122,12 @@ class DiagramRenderer(Renderer):
         g = diagram.g
 
         pos = g.new_vertex_property("vector<double>")
+        for v in g.vertices():
+            pos[v] = [400, 400]
 
         inputs = diagram.get_inputs()
         outputs = diagram.get_outputs()
         spiders = diagram.get_spiders()
-
-        SPACING = 50 # TODO: move
 
         # Alignment algorithm see notes
         # BFS
@@ -114,7 +135,7 @@ class DiagramRenderer(Renderer):
         to_process: Set[Vertex] = set()
 
         for input in inputs:
-            pos[input] = [diagram.get_boundary_index(input), SPACING * diagram.get_boundary_index(input)]
+            pos[input] = [diagram.get_boundary_index(input) + DIAGRAM_RENDER_OFFSET[0], DIAGRAM_RENDER_SPACING * diagram.get_boundary_index(input) + DIAGRAM_RENDER_OFFSET[1]]
 
             processed.add(input)
             for n in input.all_neighbors():
@@ -128,7 +149,7 @@ class DiagramRenderer(Renderer):
             # if to process only contains outputs, place them
             if all([diagram.is_output(v) for v in to_process]):
                 for output in to_process:
-                    pos[output] = [SPACING * current_step, SPACING * diagram.get_boundary_index(output)]
+                    pos[output] = [DIAGRAM_RENDER_SPACING * current_step + DIAGRAM_RENDER_OFFSET[0], DIAGRAM_RENDER_SPACING * diagram.get_boundary_index(output) + DIAGRAM_RENDER_OFFSET[1]]
 
                 to_process.clear()
                 break
@@ -151,15 +172,15 @@ class DiagramRenderer(Renderer):
                     non_placed_other_qubit_neighbors = [v for v in non_placed_neighbors if diagram.get_spider_qubit_index(v) != vertex_qubit_index]
                     # those nodes could also have neighbors, but let's ignore them for now
 
-                    all_placable = True
+                    all_placeable = True
                     for neighbor in non_placed_other_qubit_neighbors:
                         neighbor_qubit_index = diagram.get_spider_qubit_index(neighbor)
                         if len([v for v in could_be_placed if diagram.get_spider_qubit_index(v) == neighbor_qubit_index]) != 0: # ensure there is no spider getting placed on this qubit already
                             if neighbor not in to_process and not last_step_skipped: # this will block placement till this one has been discovered via a different route, gets disabled after a placement fail
-                                all_placable = False
+                                all_placeable = False
                                 break
 
-                    if all_placable:
+                    if all_placeable:
                         could_be_placed.add(vertex)
                         for n in non_placed_other_qubit_neighbors:
                             could_be_placed.add(n)
@@ -172,7 +193,7 @@ class DiagramRenderer(Renderer):
 
             # place spiders
             for spider in could_be_placed:
-                pos[spider] = [SPACING * current_step, SPACING * diagram.get_spider_qubit_index(spider)]
+                pos[spider] = [DIAGRAM_RENDER_SPACING * current_step + DIAGRAM_RENDER_OFFSET[0], DIAGRAM_RENDER_SPACING * diagram.get_spider_qubit_index(spider) + DIAGRAM_RENDER_OFFSET[1]]
 
                 if spider in to_process:
                     to_process.remove(spider)
@@ -186,12 +207,33 @@ class DiagramRenderer(Renderer):
 
         return pos
 
-
     def mouse_moved(self, x: int, y: int):
-        print(x, " ", y)
+        x *= DIAGRAM_INPUT_GRAB_SCALE
+        y *= DIAGRAM_INPUT_GRAB_SCALE
+
+        if self.grabbed_vertex is not None:
+            self.vertex_pos[self.grabbed_vertex] = [x - (x % 10), y - (y % 10)]
+            self.drawing_area.queue_draw()
+
 
     def mouse_pressed(self, x: int, y: int, button: int):
-        print("Pressed: ", x, " ", y)
+        x *= DIAGRAM_INPUT_GRAB_SCALE
+        y *= DIAGRAM_INPUT_GRAB_SCALE
+
+        # find closest vertex
+        closest_vertex, closest_dist_squared = (None, 1000000)
+        for v in self.diagram.g.vertices():
+            dist_squared = (self.vertex_pos[v][0] - x)**2 + (self.vertex_pos[v][1] - y)**2
+            if dist_squared < closest_dist_squared:
+                closest_dist_squared = dist_squared
+                closest_vertex = v
+
+        if closest_dist_squared < 150**2:
+            self.grabbed_vertex = closest_vertex
 
     def mouse_released(self, x: int, y: int, button: int):
-        print("Released: ", x, " ", y)
+        x *= DIAGRAM_INPUT_GRAB_SCALE
+        y *= DIAGRAM_INPUT_GRAB_SCALE
+
+        self.grabbed_vertex = None
+        self.drawing_area.queue_draw()

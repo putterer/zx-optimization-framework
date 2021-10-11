@@ -60,13 +60,13 @@ class Window:
     # Signal handlers
 
     def mouse_moved(self, widget, event):
-        self.renderer.mouse_moved(event.x, event.y)
+        self.renderer.mouse_moved(event.x - self.drawing_area.get_allocation().x, event.y - self.drawing_area.get_allocation().y)
 
     def mouse_pressed(self, widget, event):
-        self.renderer.mouse_pressed(event.x, event.y, event.button)
+        self.renderer.mouse_pressed(event.x - self.drawing_area.get_allocation().x, event.y - self.drawing_area.get_allocation().y, event.button)
 
     def mouse_released(self, widget, event):
-        self.renderer.mouse_released(event.x, event.y, event.button)
+        self.renderer.mouse_released(event.x - self.drawing_area.get_allocation().x, event.y - self.drawing_area.get_allocation().y, event.button)
 
     def on_tool_button_clicked(self, button: Gtk.Button):
         print("hello world ", button.get_label())
