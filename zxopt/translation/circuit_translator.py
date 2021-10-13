@@ -1,5 +1,5 @@
 import math
-from typing import cast
+from typing import cast, Dict, List
 
 from graph_tool import Vertex
 
