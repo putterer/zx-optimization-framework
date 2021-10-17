@@ -8,13 +8,11 @@ from zxopt.optimization.optimization_strategy import RandomizedCompoundSimplifie
 from zxopt.rewriting.zx_calculus.zx_calculus_rules import ZXRuleBialgebraLaw, ZXRuleSpider2, ZXRuleSpider1, \
     ZXRuleHopfLaw, ZXRulePiCommutation, ZXRuleColor, ZXRuleCopying
 from zxopt.translation import CircuitTranslator
+from zxopt.util import logger
+from zxopt.validation import CircuitUnitaryExtractor, DiagramLinearExtractor, validate_operation_equality
 from zxopt.visualization import DiagramRenderer, Window, CircuitRenderer
 
-
-# class OptimizationTest(unittest.TestCase):
-#
-#     def __init__(self):
-#         super().__init__()
+log = logger(type(Optimizer))
 
 def render(object: Union[Circuit, Diagram]):
     if type(object) == Circuit:
@@ -54,16 +52,24 @@ DEFAULT_ZX_RANKED_OPTIMIZATION_STRATEGY = RankedOptimizationStrategy( # TODO: th
 """
 Tests if a swap circuit consisting of three CNOT gates can be optimized away to the identity 
 """
-def test_optimization_sawp_circuit():
+def test_optimization_swap_circuit():
+
+    # circuit = OpenQasmParser().load_file("./circuits/swap.qasm")
     circuit = OpenQasmParser().load_file("./circuits/swap.qasm")
-    # circuit = OpenQasmParser().load_file("./circuits/teleportation.qasm")
     render(circuit)
 
     diagram = CircuitTranslator(circuit).translate()
     # render(diagram)
 
+    # validate translation
+    circuit_matrix = CircuitUnitaryExtractor(circuit).extract_matrix()
+    diagram_matrix = DiagramLinearExtractor(diagram).extract_matrix()
+
+    translation_validity = validate_operation_equality(circuit_matrix, diagram_matrix)
+    log.info(f"Translation valid: {translation_validity}")
+
     optimizer = Optimizer(diagram, DEFAULT_ZX_RANKED_OPTIMIZATION_STRATEGY, visualize=True)
     optimizer.optimize()
 
 if __name__ == '__main__':
-    test_optimization_sawp_circuit()
+    test_optimization_swap_circuit()

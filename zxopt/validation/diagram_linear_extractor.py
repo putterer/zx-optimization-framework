@@ -37,6 +37,16 @@ class DiagramLinearExtractor(Loggable):
 
             graph.remove_edge(wire)
 
+        # in case there is a direct wire from in to output, no node will be on the wire and therefore no contraction will be performed
+        # -> add identity tensor manually
+        for input in self.diagram.get_inputs():
+            for wire in input.all_edges():
+                if wire.source() in self.diagram.get_outputs() or wire.target() in self.diagram.get_outputs():
+                    new_identity_node = diagram.add_spider(0.0, "green")
+                    diagram.add_wire(wire.source(), new_identity_node)
+                    diagram.add_wire(wire.target(), new_identity_node)
+                    diagram.remove_wire(wire)
+
         # Calculate node tensors
         tensor_property = graph.new_vertex_property("object")
 

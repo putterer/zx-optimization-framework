@@ -10,16 +10,18 @@ from zxopt.visualization.render_util import draw_line, draw_text, ALIGN_RIGHT, B
     fill_square, BLACK, ALIGN_CENTER, fill_circle, normalise_tuple_vec
 from zxopt.visualization.renderer import Renderer
 
-BIT_SPACING = 60
-STEP_SPACING = 60
-COMPONENT_SIZE = 40
-CONTROL_RADIUS = COMPONENT_SIZE / 10.0
+SCALE = 2.0
 
-MEASUREMENT_SYMBOL_RADIUS = 12.0
-FONT_SIZE = 14
+BIT_SPACING = 60 * SCALE
+STEP_SPACING = 60 * SCALE
+COMPONENT_SIZE = 40 * SCALE
+CONTROL_RADIUS = COMPONENT_SIZE / 10.0 * math.sqrt(SCALE)
 
-TOP_OFFSET = 30 + COMPONENT_SIZE / 2.0
-LEFT_OFFSET = 30
+MEASUREMENT_SYMBOL_RADIUS = 12.0 * math.sqrt(SCALE)
+FONT_SIZE = 14 * SCALE
+
+TOP_OFFSET = 30 + COMPONENT_SIZE / 2.0 * SCALE
+LEFT_OFFSET = 30 * SCALE
 
 GATE_COLOR = "#278f42"
 MEASUREMENT_COLOR = "#acacac"
@@ -76,6 +78,7 @@ class CircuitRenderer(Renderer):
         for control in control_positions:
             control_pos = (step * STEP_SPACING + 0.5, control * BIT_SPACING + 0.5)
             fill_circle(ctx, control_pos, CONTROL_RADIUS)
+            ctx.set_line_width(1.0 * SCALE)
             draw_line(ctx, control_pos, (gate_pos[0] + 0.5, gate_pos[1]))
 
         # gate rect
@@ -93,6 +96,7 @@ class CircuitRenderer(Renderer):
         color(ctx, BLACK)
         draw_line(ctx, measure_pos, target_pos, offset=(0.5, 0.0))
         triangle_top_bot_offset = +9.0 if qubit_position > target_position else -9.0
+        ctx.set_line_width(1.0 * SCALE)
         ctx.move_to(target_pos[0], target_pos[1])
         ctx.line_to(target_pos[0] + 5.0, target_pos[1] + triangle_top_bot_offset)
         ctx.line_to(target_pos[0] - 5.0, target_pos[1] + triangle_top_bot_offset)
@@ -108,7 +112,7 @@ class CircuitRenderer(Renderer):
         indicator_end = (circle_center[0] + indicator_length[0], circle_center[1] + indicator_length[1])
 
         color(ctx, BLACK)
-        ctx.set_line_width(1.5)
+        ctx.set_line_width(1.5 * SCALE)
         ctx.arc(circle_center[0], circle_center[1], MEASUREMENT_SYMBOL_RADIUS, math.pi, 0.0)
         ctx.move_to(circle_center[0], circle_center[1])
         ctx.line_to(indicator_end[0], indicator_end[1])
@@ -132,9 +136,9 @@ class CircuitRenderer(Renderer):
 
             # register line
             if isinstance(bit, QuantumBit):
-                ctx.set_line_width(1.0)
-                draw_line(ctx, (0, y + 0.5), (self.circuit_width, y + 0.5))
+                ctx.set_line_width(1.0 * SCALE)
+                draw_line(ctx, (0, y + 0.5 * SCALE), (self.circuit_width, y + 0.5 * SCALE))
             else:
-                ctx.set_line_width(1.0)
-                draw_line(ctx, (0, y - 1.5), (self.circuit_width, y - 1.5))
-                draw_line(ctx, (0, y + 1.5), (self.circuit_width, y + 1.5))
+                ctx.set_line_width(1.0 * SCALE)
+                draw_line(ctx, (0, y - 1.5 * SCALE), (self.circuit_width, y - 1.5 * SCALE))
+                draw_line(ctx, (0, y + 1.5 * SCALE), (self.circuit_width, y + 1.5 * SCALE))
