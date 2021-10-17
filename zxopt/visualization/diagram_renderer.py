@@ -110,7 +110,7 @@ class DiagramRenderer(Renderer):
                    output_size = (self.diagram_width, self.diagram_height),
                    output = filename,
                    fmt = "svg",
-                   bg_color = to_cairo_color("#FFFFFF") if is_interactive() else None,
+                   bg_color = to_cairo_color("#FFFFFF") if is_interactive() else to_cairo_color("#FFFFFF"),
                    inline = False,
                    fit_view=False,
                    fit_view_ink=False,

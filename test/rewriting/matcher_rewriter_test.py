@@ -110,7 +110,7 @@ class MatcherRewriterTest(unittest.TestCase):
 
     def test_bialgebra_law_rewrite_inverse_rewrite(self):
         diagram = generate_bialegbra_law_diagram((0.0, "green"), (0.0, "green"), (0.0, "red"), (0.0, "red"))
-        diagram.set_wire_hadamard(next(diagram.get_vertex_from_identifier("b_in1").all_edges()), True)
+        # diagram.set_wire_hadamard(next(diagram.get_vertex_from_identifier("b_in1").all_edges()), True)
 
         show(diagram)
         rewrite(diagram, ZXRuleBialgebraLaw())

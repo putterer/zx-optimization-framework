@@ -7,7 +7,7 @@ from zxopt.visualization import DiagramRenderer, Window, CircuitRenderer
 ### Test
 # Reads a simple test circuit, translates it to a diagram and renders the diagram
 if __name__ == "__main__":
-    circuit = OpenQasmParser().load_file("./circuits/test/simple_translation_test.qasm")
+    circuit = OpenQasmParser().load_file("./circuits/test/bell_state_test_circuit.qasm")
     diagram = CircuitTranslator(circuit).translate()
 
     circuit_renderer = CircuitRenderer(circuit)

@@ -43,6 +43,10 @@ class CircuitRenderer(Renderer):
 
         ctx.translate(LEFT_OFFSET + max_register_font_width, TOP_OFFSET)
 
+        # White background
+        color(ctx, "#ffffff")
+        fill_square(ctx, (0, 0), 1600)
+
         self.render_registers(ctx)
 
         ctx.translate(STEP_SPACING / 2.0 + 10.0, 0)

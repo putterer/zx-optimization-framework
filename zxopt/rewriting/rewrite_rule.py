@@ -22,6 +22,7 @@ class RewriteRule:
     target: "RewriteStructure"
     variable_mapping: Dict[RewriteVariable, RewriteVariable]
     connecting_wires_spider_mapping: Dict[Vertex, Union[Vertex, List[Vertex], None]]  # a mapping from spiders of the source to the target used for transferring external, connecting wires
+    name: str
 
     inverse_rule: Optional["RewriteRule"] # this rule's inverse, generated on demand, recursive reference
 
@@ -29,13 +30,19 @@ class RewriteRule:
                  s1: "RewriteStructure" = None, # welcome to python, only evaluated once
                  s2: "RewriteStructure" = None,
                  variable_mapping: Dict[RewriteVariable, RewriteVariable] = None,
-                 connecting_wires_spider_mapping: Dict[Vertex, Vertex] = None):
+                 connecting_wires_spider_mapping: Dict[Vertex, Vertex] = None,
+                 name: str = None):
         self.source = s1 if s1 is not None else RewriteStructure()
         self.target = s2 if s2 is not None else RewriteStructure()
         self.variable_mapping = variable_mapping if variable_mapping is not None else {}
         self.connecting_wires_spider_mapping = connecting_wires_spider_mapping if connecting_wires_spider_mapping is not None else {}
 
         self.inverse_rule = None
+
+        if name is not None:
+            self.name = name
+        else:
+            self.name = str(type(self))
 
     """
     Reset all phase expression variables
@@ -70,7 +77,8 @@ class RewriteRule:
             self.target,
             self.source,
             {self.variable_mapping[s]: s for s in self.variable_mapping},
-            inversed_connecting_wires_mapping
+            inversed_connecting_wires_mapping,
+            name=f"{self.name} INVERSE"
         )
 
 

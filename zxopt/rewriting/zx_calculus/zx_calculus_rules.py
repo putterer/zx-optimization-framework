@@ -44,7 +44,7 @@ class ZXRuleSpider2(RewriteRule):
         raise NotImplementedError() # TODO
 
 
-class  ZXRuleBialgebraLaw(RewriteRule):
+class ZXRuleBialgebraLaw(RewriteRule):
     def __init__(self):
         super().__init__()
 
@@ -57,8 +57,8 @@ class  ZXRuleBialgebraLaw(RewriteRule):
         w3_source = self.source.add_wire(s12_source, s21_source, is_hadamard=False)
         w4_source = self.source.add_wire(s12_source, s22_source, is_hadamard=False)
 
-        s1_target = self.target.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0.0), 2, 0)
-        s2_target = self.target.add_spider(SPIDER_COLOR_BLACK, ConstantExpression(0.0), 2, 0)
+        s1_target = self.target.add_spider(SPIDER_COLOR_BLACK, ConstantExpression(0.0), 2, 0)
+        s2_target = self.target.add_spider(SPIDER_COLOR_WHITE, ConstantExpression(0.0), 2, 0)
         w1_target = self.target.add_wire(s1_target, s2_target, is_hadamard=False)
 
         self.connecting_wires_spider_mapping[s11_source] = s1_target

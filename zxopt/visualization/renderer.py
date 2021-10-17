@@ -41,7 +41,7 @@ class Renderer(Loggable):
 
         self.width = self.drawing_area.get_allocated_width()
         self.height = self.drawing_area.get_allocated_height()
-        self.log.info(f"Resized to {self.width}x{self.height}")
+        # self.log.debug(f"Resized to {self.width}x{self.height}")
 
     def request_render(self):
         if self.drawing_area is not None:
